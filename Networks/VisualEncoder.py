@@ -97,7 +97,7 @@ if __name__ == "__main__":
     t = torch.randn((1, 3, 512, 512))
     enc = Encoder(512)
     hs, hm, feat = enc(s, t)
-    x_enc = [l.shape for l in feat]
-    print(hs.shape, hm[0].shape, x_enc)
-    
+    print(hs.shape, hm[0].shape, len(feat))
+    for l in feat:
+        print(l.shape)
     
