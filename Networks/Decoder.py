@@ -1,9 +1,9 @@
 import torch
 import torch.nn as nn
 
-class Discriminator(nn.Module):
+class Decoder(nn.Module):
     def __init__(self, *args, **kwargs) -> None:
-        super(Discriminator, self).__init__()
+        super(Decoder, self).__init__()
 
-    def forward(x):
+    def forward(self, x):
         return x

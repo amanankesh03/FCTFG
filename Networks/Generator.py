@@ -1,9 +1,9 @@
 import torch
 import torch.nn as nn
 
-class AudioEncoder(nn.Module):
+class Generator(nn.Module):
     def __init__(self, *args, **kwargs) -> None:
-        super(AudioEncoder, self).__init__()
+        super(Generator, self).__init__()
 
-    def forward(x):
+    def forward(self, x):
         return x

@@ -2,8 +2,9 @@ import math
 import torch
 from torch import nn
 from torch.nn import functional as F
-from util import *
+from utils import *
 
+# Appearance Network
 class EncoderApp(nn.Module):
     def __init__(self, size, w_dim=512):
         super(EncoderApp, self).__init__()
@@ -90,3 +91,13 @@ class Encoder(nn.Module):
             h_source, feats = self.net_app(input_source)
 
             return h_source, None, feats
+
+if __name__ == "__main__":
+    s = torch.randn((1, 3, 512, 512))
+    t = torch.randn((1, 3, 512, 512))
+    enc = Encoder(512)
+    hs, hm, feat = enc(s, t)
+    x_enc = [l.shape for l in feat]
+    print(hs.shape, hm[0].shape, x_enc)
+    
+    
