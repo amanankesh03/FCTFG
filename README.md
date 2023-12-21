@@ -1,14 +1,14 @@
-#####  FC-TFG #####
+# FC-TFG 
 
-##    CanonicalEncoder : 2 Layer MLP
+###    CanonicalEncoder : 2 Layer MLP
 
-##    TemporalFusion : Single 1D convolution Layer
+###    TemporalFusion : Single 1D convolution Layer
 
-##    Decoder : StyleGAN2 Generator
+###    Decoder : StyleGAN2 Generator
 
-##    Discriminaotr : StyleGAN2 Discriminator
+###    Discriminaotr : StyleGAN2 Discriminator
     
-## MotionEncoder: N/A
+### MotionEncoder: N/A
 
 ## AudioEncoder : 
     For the audio source, we downsample the audio to 16kHz, then convert the downsampled audio to mel-spectrograms with a window size of 800, a hop length of 200, and 80 Mel filter banks.
