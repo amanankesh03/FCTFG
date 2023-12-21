@@ -1,12 +1,4 @@
 # FC-TFG 
-
-###    CanonicalEncoder : 2 Layer MLP
-
-###    TemporalFusion : Single 1D convolution Layer
-
-###    Decoder : StyleGAN2 Generator
-
-###    Discriminaotr : StyleGAN2 Discriminator
     
 ### MotionEncoder: N/A
 
@@ -31,15 +23,24 @@
     image-to-image translation. In Proc. CVPR. 2287–2296.
 
 
-### Pretrained models required ###
+###    CanonicalEncoder : 2 Layer MLP
 
-## SyncNet :   
+###    TemporalFusion : Single 1D convolution Layer
+
+###    Decoder : StyleGAN2 Generator
+
+###    Discriminaotr : StyleGAN2 Discriminator
+
+
+## Pretrained models required ##
+
+### SyncNet :   
         1. Joon Son Chung and Andrew Zisserman. 2017. Out of time: automated lip sync in the wild. 
         In Proc. ACCV. Springer, 251–263.
 
-## VGG : 
+### VGG : 
         1. Richard Zhang, Phillip Isola, Alexei A Efros, Eli Shechtman, and Oliver Wang. 2018. The unreasonable effectiveness of deep features as a perceptual metric. InProc. CVPR. 586–595.
 
-## ArcFace : 
+### ArcFace : 
         2. Jiankang Deng, Jia Guo, Niannan Xue, and Stefanos Zafeiriou. 2019. Arcface:
         Additive angular margin loss for deep face recognition. In Proc. CVPR. 4690–4699.
