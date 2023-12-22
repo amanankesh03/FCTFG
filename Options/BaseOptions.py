@@ -16,18 +16,28 @@ parser.add_argument("--display_freq", type=int, default=5000)
 parser.add_argument("--dataset", type=str, default='./data')
 
 ### Visual Encoder Options ###
-
+parser.add_argument('--visual_encoder_type', default='GradualStyleEncoder', type=str, help='Which encoder to use')
+parser.add_argument('--visual_encoder_layers', default='50', type=int, help='Number of visual encoder Layers')
+parser.add_argument('--visual_input_nc', default='3', type=int, help='Number of visual input channels')
+parser.add_argument('--visual_n_styles', default='512', type=int, help='Number of visual styles')
 
 ### Audio Encoder Options ###
 
 
 ### Canonical Encoder Options ###
 
+parser.add_argument('--canonical_encoder_input_size', default='50', type=int, help='Number of input neurons')
+parser.add_argument('--canonical_encoder_output_size', default='50', type=int, help='Number of output neurons')
+parser.add_argument('--canonical_encoder_hidden_size', default='50', type=int, help='Number of hidden neurons')
 
 ### Motion Encoder Options ###
 
 
 ### Temporal Fusion Options ###
+
+parser.add_argument('--temporal_fusion_input_size', default='512', type=int, help='Number of input neurons')
+parser.add_argument('--temporal_fusion_output_size', default='512', type=int, help='Number of output neurons')
+parser.add_argument('--temporal_fusion_kernel_size', default='3', type=int, help='Number of hidden neurons')
 
 
 ### Generator Options ###

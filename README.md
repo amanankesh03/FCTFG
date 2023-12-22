@@ -7,7 +7,7 @@
     1. KR Prajwal, Rudrabha Mukhopadhyay, Vinay P Namboodiri, and CV Jawahar. 2020. A lip sync expert is all you need for speech to lip generation in the wild. InProc. ACM MM. 484–492.
     [paper Link](https://arxiv.org/abs/2008.10010)
 
-## Visual Encoder: StyleGAN inversion Network
+## Visual Encoder: StyleGAN Inversion Network
     First of all, we pre-train a StyleGAN2 [24] generator on the VoxCeleb2 dataset and then train HyperStyle [1] inversion network with the pre-trained StyleGAN2 model. Specifically, we replace the e4e [46] encoder in the HyperStyle model with pSp [35]encoder.
 
     1. Yuval Alaluf, Omer Tov, Ron Mokady, Rinon Gal, and Amit Bermano. 2022.
@@ -16,11 +16,11 @@
 
     2. Omer Tov, Yuval Alaluf, Yotam Nitzan, Or Patashnik, and Daniel Cohen-Or. 2021.
     Designing an encoder for stylegan image manipulation. ACM Transactions on
-    Graphics 40, 4 (2021), 1–14
+    Graphics 40, 4 (2021), 1–14  ------------------------------------------------------HyperStyle
 
     3. Elad Richardson, Yuval Alaluf, Or Patashnik, Yotam Nitzan, Yaniv Azar, Stav
     Shapiro, and Daniel Cohen-Or. 2021. Encoding in style: a stylegan encoder for
-    image-to-image translation. In Proc. CVPR. 2287–2296.
+    image-to-image translation. In Proc. CVPR. 2287–2296. ------------------------------PSP
 
 
 ###    CanonicalEncoder : 2 Layer MLP
@@ -31,7 +31,7 @@
 
 ###    Discriminaotr : StyleGAN2 Discriminator
 
-###    MotionEncoder : N/A
+###    MotionEncoder : 3 Layer MLP
 
 
 ## Pretrained models required ##
