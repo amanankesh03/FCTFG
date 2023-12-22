@@ -12,15 +12,16 @@ from utils import EqualLinear
 class VisualEncoder(nn.Module):
     def __init__(self, opts) -> None:
         super(VisualEncoder, self).__init__()
-        self.VisualEncoder = self.set_encoder(opts)
+        self.opts = opts
+        self.VisualEncoder = self.set_encoder()
 
-    def set_encoder(self, opts):
+    def set_encoder(self):
         if self.opts.visual_encoder_type == 'GradualStyleEncoder':
-            encoder = GradualStyleEncoder(opts.visual_encoder_layers, 'ir_se', self.opts)
+            encoder = GradualStyleEncoder(self.opts.visual_encoder_layers, 'ir_se', self.opts)
         elif self.opts.visual_encoder_type == 'BackboneEncoderUsingLastLayerIntoW':
-            encoder = BackboneEncoderUsingLastLayerIntoW(opts.visual_encoder_layers, 'ir_se', self.opts)
+            encoder = BackboneEncoderUsingLastLayerIntoW(self.opts.visual_encoder_layers, 'ir_se', self.opts)
         elif self.opts.visual_encoder_type == 'BackboneEncoderUsingLastLayerIntoWPlus':
-            encoder = BackboneEncoderUsingLastLayerIntoWPlus(opts.visual_encoder_layers, 'ir_se', self.opts)    
+            encoder = BackboneEncoderUsingLastLayerIntoWPlus(self.opts.visual_encoder_layers, 'ir_se', self.opts)    
         else:
             raise Exception('{} is not a valid encoders'.format(self.opts.encoder_type))
         return encoder
@@ -31,9 +32,11 @@ class VisualEncoder(nn.Module):
 class GradualStyleBlock(Module):
     def __init__(self, in_c, out_c, spatial):
         super(GradualStyleBlock, self).__init__()
+
         self.out_c = out_c
         self.spatial = spatial
         num_pools = int(np.log2(spatial))
+
         modules = []
         modules += [Conv2d(in_c, out_c, kernel_size=3, stride=2, padding=1),
                     nn.LeakyReLU()]
@@ -58,10 +61,13 @@ class GradualStyleEncoder(Module):
         assert num_layers in [50, 100, 152], 'num_layers should be 50,100, or 152'
         assert mode in ['ir', 'ir_se'], 'mode should be ir or ir_se'
         blocks = get_blocks(num_layers)
+
         if mode == 'ir':
             unit_module = bottleneck_IR
+
         elif mode == 'ir_se':
             unit_module = bottleneck_IR_SE
+
         self.input_layer = Sequential(Conv2d(opts.visual_input_nc, 64, (3, 3), 1, 1, bias=False),
                                       BatchNorm2d(64),
                                       PReLU(64))
@@ -77,6 +83,8 @@ class GradualStyleEncoder(Module):
         self.style_count = opts.visual_n_styles
         self.coarse_ind = 3
         self.middle_ind = 7
+
+
         for i in range(self.style_count):
             if i < self.coarse_ind:
                 style = GradualStyleBlock(512, 512, 16)
@@ -85,6 +93,7 @@ class GradualStyleEncoder(Module):
             else:
                 style = GradualStyleBlock(512, 512, 64)
             self.styles.append(style)
+
         self.latlayer1 = nn.Conv2d(256, 512, kernel_size=1, stride=1, padding=0)
         self.latlayer2 = nn.Conv2d(128, 512, kernel_size=1, stride=1, padding=0)
 

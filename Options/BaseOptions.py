@@ -15,42 +15,49 @@ parser.add_argument("--save_freq", type=int, default=1000)
 parser.add_argument("--display_freq", type=int, default=5000)
 parser.add_argument("--dataset", type=str, default='./data')
 
-### Visual Encoder Options ###
-parser.add_argument('--visual_encoder_type', default='GradualStyleEncoder', type=str, help='Which encoder to use')
-parser.add_argument('--visual_encoder_layers', default='50', type=int, help='Number of visual encoder Layers')
-parser.add_argument('--visual_input_nc', default='3', type=int, help='Number of visual input channels')
-parser.add_argument('--visual_n_styles', default='512', type=int, help='Number of visual styles')
 
 ### Audio Encoder Options ###
 
 
-### Canonical Encoder Options ###
+### Visual Encoder Options ###
+parser.add_argument('--visual_encoder_type', default='GradualStyleEncoder', type=str, help='Which encoder to use')
+parser.add_argument('--visual_encoder_layers', default='50', type=int, help='Number of visual encoder Layers')
+parser.add_argument('--visual_input_nc', default='3', type=int, help='Number of visual input channels')
+parser.add_argument('--visual_n_styles', default='10', type=int, help='Number of visual styles')
 
-parser.add_argument('--canonical_encoder_input_size', default='50', type=int, help='Number of input neurons')
-parser.add_argument('--canonical_encoder_output_size', default='50', type=int, help='Number of output neurons')
-parser.add_argument('--canonical_encoder_hidden_size', default='50', type=int, help='Number of hidden neurons')
+
+### Canonical Encoder Options ###
+parser.add_argument('--canonical_encoder_input_size', default=50, type=int, help='Number of input neurons')
+parser.add_argument('--canonical_encoder_output_size', default=50, type=int, help='Number of output neurons')
+parser.add_argument('--canonical_encoder_hidden_size', default=50, type=int, help='Number of hidden neurons')
+
 
 ### Motion Encoder Options ###
+parser.add_argument('--motion_encoder_input_size', default=50, type=int, help='Number of input neurons')
+parser.add_argument('--motion_encoder_output_size', default=50, type=int, help='Number of output neurons')
+parser.add_argument('--motion_encoder_hidden_sizes', default=(10, 10), type=tuple, help='Number of hidden neurons')
 
 
 ### Temporal Fusion Options ###
+parser.add_argument('--temporal_fusion_input_size', default=512, type=int, help='Number of input neurons')
+parser.add_argument('--temporal_fusion_output_size', default=512, type=int, help='Number of output neurons')
+parser.add_argument('--temporal_fusion_kernel_size', default=3, type=int, help='Number of hidden neurons')
 
-parser.add_argument('--temporal_fusion_input_size', default='512', type=int, help='Number of input neurons')
-parser.add_argument('--temporal_fusion_output_size', default='512', type=int, help='Number of output neurons')
-parser.add_argument('--temporal_fusion_kernel_size', default='3', type=int, help='Number of hidden neurons')
 
-
-### Generator Options ###
-
-parser.add_argument("--g_reg_every", type=int, default=4, help='generator regularization every nth iteration')
+### Generator Options
+parser.add_argument("--generator_reg_every", type=int, default=4, help='generator regularization every nth iteration')
 parser.add_argument("--lr", type=float, default=0.002)
-parser.add_argument("--channel_multiplier", type=int, default=1)
-parser.add_argument("--latent_dim_style", type=int, default=512)
-parser.add_argument("--latent_dim_motion", type=int, default=20)
+
+
+### Decoder Options ###
+parser.add_argument("--decoder_channel_multiplier", type=int, default=1)
+parser.add_argument("--decoder_latent_dim_style", type=int, default=512)
+parser.add_argument("--decoder_size", type=int, default=20)
+parser.add_argument("--decoder_num_mlp", type=int, default=8)
+
 
 ### Discriminator Options ###
-
-parser.add_argument("--d_reg_every", type=int, default=16, help='discriminator regularization every kth iteration')
+parser.add_argument("--discriminator_reg_every", type=int, default=16, help='discriminator regularization every kth iteration')
 
 
 opts = parser.parse_args()

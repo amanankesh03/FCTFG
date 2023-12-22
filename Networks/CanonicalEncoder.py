@@ -6,10 +6,10 @@ import torch.nn as nn
 
 class CanonicalEncoder(nn.Module):
     def __init__(self, opts):
+        super(CanonicalEncoder, self).__init__()
         input_size = opts.canonical_encoder_input_size
         hidden_size = opts.canonical_encoder_hidden_size
         output_size = opts.canonical_encoder_output_size
-        super(CanonicalEncoder, self).__init__()
         self.fc1 = nn.Linear(input_size, hidden_size)  # Fully connected layer 1
         self.relu = nn.ReLU()  # ReLU activation function
         self.fc2 = nn.Linear(hidden_size, output_size)  # Fully connected layer 2

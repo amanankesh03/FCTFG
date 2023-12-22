@@ -5,29 +5,29 @@ from torch import nn
 from torch.nn import functional as F
 from utils import *
 
-class Generator(nn.Module):
-    def __init__(
-            self,
-            size,
-            style_dim,
-            n_mlp,
-            channel_multiplier=2,
-            blur_kernel=[1, 3, 3, 1],
-            lr_mlp=0.01,
-    ):
-        super().__init__()
+## StyleGAN Generator
 
-        self.size = size
+class Decoder(nn.Module):
+    def __init__(self, opts):
+        super(Decoder, self).__init__()
 
-        self.style_dim = style_dim
+        # size = opts.decoder_size
+        # style_dim = opts.decoder_style_dim
+
+        n_mlp = opts.decoder_num_mlp
+
+        channel_multiplier= opts.decoder_channel_multiplier #2
+        blur_kernel=[1, 3, 3, 1]
+        lr_mlp=0.01
+
+        self.size = opts.decoder_size
+        self.style_dim = opts.decoder_latent_dim_style
 
         layers = [PixelNorm()]
 
         for i in range(n_mlp):
             layers.append(
-                EqualLinear(
-                    style_dim, style_dim, lr_mul=lr_mlp, activation='fused_lrelu'
-                )
+                EqualLinear(self.style_dim, self.style_dim, lr_mul=lr_mlp, activation='fused_lrelu')
             )
 
         self.style = nn.Sequential(*layers)
@@ -46,11 +46,11 @@ class Generator(nn.Module):
 
         self.input = ConstantInput(self.channels[4])
         self.conv1 = StyledConv(
-            self.channels[4], self.channels[4], 3, style_dim, blur_kernel=blur_kernel
+            self.channels[4], self.channels[4], 3, self.style_dim, blur_kernel=blur_kernel
         )
-        self.to_rgb1 = ToRGB(self.channels[4], style_dim, upsample=False)
+        self.to_rgb1 = ToRGB(self.channels[4], self.style_dim, upsample=False)
 
-        self.log_size = int(math.log(size, 2))
+        self.log_size = int(math.log(self.size, 2))
         self.num_layers = (self.log_size - 2) * 2 + 1
 
         self.convs = nn.ModuleList()
@@ -73,7 +73,7 @@ class Generator(nn.Module):
                     in_channel,
                     out_channel,
                     3,
-                    style_dim,
+                    self.style_dim,
                     upsample=True,
                     blur_kernel=blur_kernel,
                 )
@@ -81,11 +81,11 @@ class Generator(nn.Module):
 
             self.convs.append(
                 StyledConv(
-                    out_channel, out_channel, 3, style_dim, blur_kernel=blur_kernel
+                    out_channel, out_channel, 3, self.style_dim, blur_kernel=blur_kernel
                 )
             )
 
-            self.to_rgbs.append(ToRGB(out_channel, style_dim))
+            self.to_rgbs.append(ToRGB(out_channel, self.style_dim))
 
             in_channel = out_channel
 
