@@ -1,4 +1,5 @@
 import torch
+import math
 import numpy as np
 from torch import nn
 import torch.nn.functional as F
@@ -29,14 +30,15 @@ class VisualEncoder(nn.Module):
     def forward(self, x):
         return self.VisualEncoder(x)
 
+
 class GradualStyleBlock(Module):
     def __init__(self, in_c, out_c, spatial):
         super(GradualStyleBlock, self).__init__()
 
         self.out_c = out_c
         self.spatial = spatial
-        num_pools = int(np.log2(spatial))
-
+        num_pools = int(math.ceil(np.log2(spatial)))
+        # print(f'num_pools : {num_pools}')
         modules = []
         modules += [Conv2d(in_c, out_c, kernel_size=3, stride=2, padding=1),
                     nn.LeakyReLU()]
@@ -49,18 +51,21 @@ class GradualStyleBlock(Module):
         self.linear = EqualLinear(out_c, out_c, lr_mul=1)
 
     def forward(self, x):
+        # print(f'in shape : {x.shape}')
         x = self.convs(x)
-        x = x.view(-1, self.out_c)
+        # print(f'out shape : {x.shape}')
+        # assert x.shape[1] == 1
+        x = x.view(x.shape[0], -1, self.out_c)
         x = self.linear(x)
+        # print(f'final shape : {x.shape}')
         return x
 
 
 class GradualStyleEncoder(Module):
     def __init__(self, num_layers, mode='ir', opts=None):
         super(GradualStyleEncoder, self).__init__()
-        assert num_layers in [50, 100, 152], 'num_layers should be 50,100, or 152'
+        assert num_layers in [50, 100, 152], 'num_layers should be 50, 100, or 152'
         assert mode in ['ir', 'ir_se'], 'mode should be ir or ir_se'
-        blocks = get_blocks(num_layers)
 
         if mode == 'ir':
             unit_module = bottleneck_IR
@@ -71,7 +76,10 @@ class GradualStyleEncoder(Module):
         self.input_layer = Sequential(Conv2d(opts.visual_input_nc, 64, (3, 3), 1, 1, bias=False),
                                       BatchNorm2d(64),
                                       PReLU(64))
+        
+        blocks = get_blocks(num_layers)
         modules = []
+        
         for block in blocks:
             for bottleneck in block:
                 modules.append(unit_module(bottleneck.in_channel,
@@ -83,17 +91,19 @@ class GradualStyleEncoder(Module):
         self.style_count = opts.visual_n_styles
         self.coarse_ind = 3
         self.middle_ind = 7
-
-
+        
+        self.spatial_mul = int(opts.size/256)
+        # style blocks
         for i in range(self.style_count):
             if i < self.coarse_ind:
-                style = GradualStyleBlock(512, 512, 16)
+                style = GradualStyleBlock(512, 512, 16 * self.spatial_mul)
             elif i < self.middle_ind:
-                style = GradualStyleBlock(512, 512, 32)
+                style = GradualStyleBlock(512, 512, 32 * self.spatial_mul)
             else:
-                style = GradualStyleBlock(512, 512, 64)
+                style = GradualStyleBlock(512, 512, 64 * self.spatial_mul)
             self.styles.append(style)
 
+        # Latent Layers
         self.latlayer1 = nn.Conv2d(256, 512, kernel_size=1, stride=1, padding=0)
         self.latlayer2 = nn.Conv2d(128, 512, kernel_size=1, stride=1, padding=0)
 
@@ -119,6 +129,8 @@ class GradualStyleEncoder(Module):
     def forward(self, x):
         x = self.input_layer(x)
 
+        # print(f'x : {x.shape}')
+
         latents = []
         modulelist = list(self.body._modules.values())
         for i, l in enumerate(modulelist):
@@ -129,17 +141,23 @@ class GradualStyleEncoder(Module):
                 c2 = x
             elif i == 23:
                 c3 = x
+        # print(c1.shape, c2.shape, c3.shape)
+        # print(afdfadf)
 
         for j in range(self.coarse_ind):
             latents.append(self.styles[j](c3))
-
+        
         p2 = self._upsample_add(c3, self.latlayer1(c2))
+ 
+
         for j in range(self.coarse_ind, self.middle_ind):
             latents.append(self.styles[j](p2))
-
+            # print(f'latents mid : {latents[0].shape, len(latents)}')
+           
         p1 = self._upsample_add(p2, self.latlayer2(c1))
         for j in range(self.middle_ind, self.style_count):
             latents.append(self.styles[j](p1))
+           
 
         out = torch.stack(latents, dim=1)
         return out
@@ -215,3 +233,18 @@ class BackboneEncoderUsingLastLayerIntoWPlus(Module):
         return x
     
 
+if __name__ == '__main__':
+    from Options.BaseOptions import opts
+    device = 'cuda:0'
+    opts.size *= 2
+    ve = VisualEncoder(opts).to(device)
+    s = opts.size 
+    xs = torch.randn([1, 3, s, s]).to(device)
+    # try :
+    ls = ve(xs)
+    print(ls.shape)
+        # while(1):
+        #     print() 
+    # except:
+    #     while(1):
+    #         print()

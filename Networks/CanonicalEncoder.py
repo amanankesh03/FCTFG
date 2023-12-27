@@ -21,10 +21,13 @@ class CanonicalEncoder(nn.Module):
         return x
 
 if __name__ == "__main__":
-    input_size = 10
-    hidden_size = 10
-    output_size = 10
-    model = CanonicalEncoder(input_size, hidden_size, output_size)
+    from Options.BaseOptions import opts
+    ce = CanonicalEncoder(opts).to(opts.device)
+    z_s = torch.randn([100, 18, 512]).to(opts.device)
 
-    for p in model.parameters():
-        print(p.shape)
+    # for batch in z_s:
+    #     print(batch.shape)
+    z_s_c = ce(z_s)
+    print(z_s_c.shape)
+    # for p in model.parameters():
+    #     print(p.shape)

@@ -30,16 +30,10 @@ class MotionEncoder(nn.Module):
 
         return x
 
-class Options:
-    def __init__(self):
-
-        self.motion_encoder_hidden_sizes = (10, 10)
-        self.motion_encoder_input_size = 10
-        self.motion_encoder_output_size = 10
 
 if __name__ == "__main__":
-    opts = Options()
+    from Options.BaseOptions import opts
     model = MotionEncoder(opts)
-
+    
     for p in model.parameters():
         print(p.shape)

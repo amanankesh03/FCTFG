@@ -52,25 +52,7 @@ def get_blocks(num_layers):
 		raise ValueError("Invalid number of layers: {}. Must be one of [50, 100, 152]".format(num_layers))
 	return blocks
 
-
-class SEModule(Module):
-	def __init__(self, channels, reduction):
-		super(SEModule, self).__init__()
-		self.avg_pool = AdaptiveAvgPool2d(1)
-		self.fc1 = Conv2d(channels, channels // reduction, kernel_size=1, padding=0, bias=False)
-		self.relu = ReLU(inplace=True)
-		self.fc2 = Conv2d(channels // reduction, channels, kernel_size=1, padding=0, bias=False)
-		self.sigmoid = Sigmoid()
-
-	def forward(self, x):
-		module_input = x
-		x = self.avg_pool(x)
-		x = self.fc1(x)
-		x = self.relu(x)
-		x = self.fc2(x)
-		x = self.sigmoid(x)
-		return module_input * x
-
+# IR : Identity Regularization
 
 class bottleneck_IR(Module):
 	def __init__(self, in_channel, depth, stride):
@@ -93,6 +75,28 @@ class bottleneck_IR(Module):
 		res = self.res_layer(x)
 		return res + shortcut
 
+# Soft embedding Module
+	
+class SEModule(Module):
+	def __init__(self, channels, reduction):
+		super(SEModule, self).__init__()
+		self.avg_pool = AdaptiveAvgPool2d(1)
+		self.fc1 = Conv2d(channels, channels // reduction, kernel_size=1, padding=0, bias=False)
+		self.relu = ReLU(inplace=True)
+		self.fc2 = Conv2d(channels // reduction, channels, kernel_size=1, padding=0, bias=False)
+		self.sigmoid = Sigmoid()
+
+	def forward(self, x):
+		module_input = x
+		x = self.avg_pool(x)
+		x = self.fc1(x)
+		x = self.relu(x)
+		x = self.fc2(x)
+		x = self.sigmoid(x)
+		return module_input * x
+
+
+# IRSE: Identity Regularization with Soft Embeddings
 
 class bottleneck_IR_SE(Module):
 	def __init__(self, in_channel, depth, stride):

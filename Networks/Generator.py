@@ -1,11 +1,11 @@
 import torch
 import torch.nn as nn
-from Networks.AudioEncoder import AudioEncoder
 from Networks.VisualEncoder import *
-from Networks.CanonicalEncoder import CanonicalEncoder
-from Networks.TemporalFusion import TemporalFusion
-from Networks.MotionEncoder import MotionEncoder
 from Networks.Decoder import Decoder
+from Networks.AudioEncoder import AudioEncoder
+from Networks.MotionEncoder import MotionEncoder
+from Networks.TemporalFusion import TemporalFusion
+from Networks.CanonicalEncoder import CanonicalEncoder
 
 
 class Generator(nn.Module):
