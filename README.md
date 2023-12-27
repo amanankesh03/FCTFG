@@ -7,7 +7,7 @@
         a hop length of 200, and 80 Mel filter banks.
 
         1. KR Prajwal, Rudrabha Mukhopadhyay, Vinay P Namboodiri, and CV Jawahar. 2020. A lip sync expert is all you need for speech to lip generation in the wild. 
-        InProc. ACM MM. 484–492.
+        InProc. ACM MM. 484–492. ---------------------------------------------------------- Wav2Lip
 
 ## Visual Encoder: StyleGAN Inversion Network
 
@@ -43,6 +43,13 @@
         2. Train pSp encoder using HyperStyle code ( replace e4e encoder in HyperStyle with pSp encoder ) with pretrained Generator from step 1
         3. Train whole Network end to end with pSp encoder as Visual Encoder and StyleGAN2 Generator as Decoder.
 
+### Losses :
+        1. Orthogonality Loss : To disentangle latent space
+        2. Sync Loss : from SyncNet
+        3. Identity Loss : From Arcface
+        4. Reconstruction Loss : L1
+        5. Perceptual Loss : From VGG19
+        6. Adversarial Loss : GAN Loss
 
 ## Pretrained models required ##
 

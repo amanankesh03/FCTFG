@@ -47,3 +47,7 @@ class AudioEncoder(nn.Module):
     
     def forward(self, x):
         return self.audio_encoder(x)
+    
+if __name__ == "__main__":
+    from Options.BaseOptions import opts
+    
