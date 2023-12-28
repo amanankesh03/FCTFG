@@ -1,11 +1,10 @@
-import torch
-import Networks
-from Networks.Discriminator import Discriminator
-from Networks.Generator import Generator
-import torch.nn.functional as F
-from torch import nn, optim
 import os
-from vgg19 import VGGLoss
+import torch
+from torch import nn, optim
+import torch.nn.functional as F
+from Loss.VGG_loss import VGGLoss
+from Networks.Generator import Generator
+from Networks.Discriminator import Discriminator
 from torch.nn.parallel import DistributedDataParallel as DDP
 
 

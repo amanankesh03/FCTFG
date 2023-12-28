@@ -33,7 +33,11 @@ class MotionEncoder(nn.Module):
 
 if __name__ == "__main__":
     from Options.BaseOptions import opts
-    model = MotionEncoder(opts)
-    
-    for p in model.parameters():
+    me = MotionEncoder(opts)
+    z_a_d = torch.randn([100, 2 * 18 * 512])
+    z_c_d = me(z_a_d)
+    print(z_c_d.shape)
+    z_c_d = z_c_d.view(z_c_d.shape[0], -1, 512)
+    print(z_c_d.shape)
+    for p in me.parameters():
         print(p.shape)

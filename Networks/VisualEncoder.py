@@ -243,6 +243,8 @@ if __name__ == '__main__':
     # try :
     ls = ve(xs)
     print(ls.shape)
+    ls = ls.view(ls.shape[0], -1, ls.shape[-1])
+    print(ls.shape)
         # while(1):
         #     print() 
     # except:

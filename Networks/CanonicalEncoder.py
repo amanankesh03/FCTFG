@@ -15,15 +15,17 @@ class CanonicalEncoder(nn.Module):
         self.fc2 = nn.Linear(hidden_size, output_size)  # Fully connected layer 2
 
     def forward(self, x):
-        x = self.fc1(x)
-        x = self.relu(x)
-        x = self.fc2(x)
+        with torch.autograd.profiler.record_function('input'):
+            x = self.fc1(x)
+            x = self.relu(x)
+            x = self.fc2(x)
+
         return x
 
 if __name__ == "__main__":
     from Options.BaseOptions import opts
     ce = CanonicalEncoder(opts).to(opts.device)
-    z_s = torch.randn([100, 18, 512]).to(opts.device)
+    z_s = torch.randn([100, 18 * 512]).to(opts.device)
 
     # for batch in z_s:
     #     print(batch.shape)

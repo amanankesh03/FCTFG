@@ -410,8 +410,6 @@ class StyledConv(nn.Module):
         )
 
         self.noise = NoiseInjection()
-        # self.bias = nn.Parameter(torch.zeros(1, out_channel, 1, 1))
-        # self.activate = ScaledLeakyReLU(0.2)
         self.activate = FusedLeakyReLU(out_channel)
 
     def forward(self, input, style, noise=None):
@@ -436,10 +434,9 @@ class ToRGB(nn.Module):
     def forward(self, input, style, skip=None):
         out = self.conv(input, style)
         out = out + self.bias
-
+        
         if skip is not None:
-            skip = self.upsample(skip)
-
+            skip = self.upsample(skip)            
             out = out + skip
 
         return out
