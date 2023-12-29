@@ -155,10 +155,11 @@ class Decoder(nn.Module):
         
 if __name__ =="__main__":
     from Options.BaseOptions import opts
-    opts.decoder_size *=1
+    opts.decoder_size *=2
+    
     d = Decoder(opts).to(opts.device)
     print(d.num_layers)
     z_f = torch.randn(10, 18, 512).to(opts.device)
-    img, _ = d(z_f)
-    print(img.shape)
+    # img, _ = d(z_f)
+    # print(img.shape)
 

@@ -4,22 +4,24 @@ import librosa.display
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Load audio file
+def plot_mel_spectrogram(audio_path, hop_length=200):
+    # Load the audio file
+    y, sr = librosa.load(audio_path, sr=16000)
 
-y, sr = librosa.load(audio_path, sr=None)  # Load with the original sample rate
+    # Calculate mel spectrogram
+    mel_spec = librosa.feature.melspectrogram(y, sr=sr, hop_length=hop_length, n_mels=80)
 
-# Compute spectrogram
-spectrogram = librosa.feature.melspectrogram(y, sr=sr, n_fft=1024, hop_length=256, n_mels=128)
-print(spectrogram.shape)
-spectrogram_db = librosa.power_to_db(spectrogram, ref=np.max)
-print(spectrogram_db.shape)
+    # Convert to decibels (log scale)
+    mel_spec_db = librosa.amplitude_to_db(mel_spec, ref=np.max)
+    print(mel_spec_db.shape)
 
-# Plot and save spectrogram as an image
-plt.figure(figsize=(10, 4))
-librosa.display.specshow(spectrogram_db, x_axis='time', y_axis='mel', sr=sr, hop_length=256, cmap='viridis')
-plt.colorbar(format='%+2.0f dB')
-plt.title('Spectrogram')
-plt.savefig('spectrogram.png')  # Save the plot as an image file
+    # Plot mel spectrogram
+    plt.figure(figsize=(10, 4))
+    librosa.display.specshow(mel_spec_db, sr=sr, hop_length=hop_length, x_axis='time', y_axis='mel')
+    plt.colorbar(format='%+2.0f dB')
+    plt.title('Mel Spectrogram')
+    plt.show()
 
-# Show the plot (optional)
-plt.show()
+# Example usage
+# audio_path = "path/to/your/audio/file.wav"
+plot_mel_spectrogram(audio_path)

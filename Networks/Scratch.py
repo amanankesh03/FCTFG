@@ -1,26 +1,37 @@
 import torch
+import torch.nn as nn
+import matplotlib.pyplot as plt
+import numpy as np
 
-# Create a tensor 'ws'
-ws = torch.randn(5, 10)  # Assuming a 2D tensor with shape (5, 10)
+# Define a simple 1D convolutional layer
+conv1d = nn.Conv1d(in_channels=1, out_channels=1, kernel_size=3)
 
-# Define a block with information about the block to be extracted
-class BlockInfo:
-    def __init__(self, num_conv, num_torgb):
-        self.num_conv = num_conv
-        self.num_torgb = num_torgb
+# Create a 1D input signal
+input_signal = torch.tensor([1.0, 2.0, 3.0, 4.0, 5.0], dtype=torch.float32).view(1, 1, -1)  # Shape: [batch_size, channels, sequence_length]
 
-# Assume you have a 'BlockInfo' instance
-block = BlockInfo(num_conv=3, num_torgb=2)
+# Perform 1D convolution
+output_signal = conv1d(input_signal)
 
-# Index to start extracting the block
-w_idx = 2
+# Convert tensors to numpy arrays for plotting
+input_signal_np = input_signal.squeeze().numpy()
+output_signal_np = output_signal.squeeze().detach().numpy()
 
-# Extract the block using 'narrow'
-block_ws = []
-block_ws.append(ws.narrow(1, w_idx, block.num_conv + block.num_torgb))
+# Plot the input and output signals
+plt.figure(figsize=(10, 4))
 
-# Print the original tensor and the extracted block
-print("Original ws:")
-print(ws.shape)
-print("\nExtracted Block:")
-print(block_ws[0].shape)
+# Plot input signal
+plt.subplot(2, 1, 1)
+plt.plot(input_signal_np, marker='o')
+plt.title('Input Signal')
+plt.xlabel('Index')
+plt.ylabel('Amplitude')
+
+# Plot output signal
+plt.subplot(2, 1, 2)
+plt.plot(output_signal_np, marker='o')
+plt.title('Output Signal after 1D Convolution')
+plt.xlabel('Index')
+plt.ylabel('Amplitude')
+
+plt.tight_layout()
+plt.show()

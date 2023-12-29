@@ -8,6 +8,26 @@
 
         1. KR Prajwal, Rudrabha Mukhopadhyay, Vinay P Namboodiri, and CV Jawahar. 2020. A lip sync expert is all you need for speech to lip generation in the wild. 
         InProc. ACM MM. 484–492. ---------------------------------------------------------- Wav2Lip
+        
+        2 . https://towardsdatascience.com/audio-deep-learning-made-simple-part-1-state-of-the-art-techniques-da1d3dff2504
+        
+#### MFCC: Mel Frequency Cepstral Coefficients
+
+        Mel Spectrograms work well for most audio deep learning applications. However, for problems dealing with human speech, like Automatic Speech Recognition,
+        you might find that MFCC (Mel Frequency Cepstral Coefficients) sometimes work better.These essentially take Mel Spectrograms and apply a couple of further 
+        processing steps. This selects a compressed representation of the frequency bands from the Mel Spectrogram that correspond to the most common frequencies
+         at which humans speak.
+
+
+#### SpecAugment: 
+        
+        The normal transforms you would use for an image don’t apply to spectrograms. For instance, a horizontal flip or a rotation would substantially alter the
+        spectrogram and the sound that it represents.Instead, we use a method known as SpecAugment where we block out sections of the spectrogram.
+        There are two flavors:
+
+        1. Frequency mask — randomly mask out a range of consecutive frequencies by adding horizontal bars on the spectrogram.
+        2. Time mask — similar to frequency masks, except that we randomly block out ranges of time from the spectrogram by using vertical bars.
+
 
 ## Visual Encoder: StyleGAN Inversion Network
 
@@ -63,3 +83,16 @@
 ### ArcFace : 
         1. Jiankang Deng, Jia Guo, Niannan Xue, and Stefanos Zafeiriou. 2019. Arcface:
         Additive angular margin loss for deep face recognition. In Proc. CVPR. 4690–4699.
+
+
+### Status :
+        1. Canonical Encoder : Done
+        2. Motion Encoder : Done 
+        3. Temporal Fusion : Need to understand the concept behind it. (Number of layer)
+        4. Decoder : Done
+        5. Visual Encoder : Done
+        6. Audio Encoder : Need to understand the concept behind it.
+
+### To Do next: 
+        1. Audio Encoder - Reading paper referenced 
+        2. Temporal Fusion - Finding paper related to it
