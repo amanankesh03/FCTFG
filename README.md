@@ -53,7 +53,7 @@
                                This process is often used to reduce the temporal resolution of a time series or sequence
                                while retaining essential information. eg., Applying pooling on temporal data (along channelwise).
 
-        Modality Fusion : eg., Concatenating diffent modality features and applying a Linear layer.
+        Modality Fusion : eg., Concatenating different modality features and applying a Linear layer.
 
         1. EPIC-Fusion: Audio-Visual Temporal Binding for Egocentric Action Recognition
         2. TCN : Temporal Convolutional Networks: A Unified Approach to Action Segmentation
