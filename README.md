@@ -46,9 +46,19 @@
         image-to-image translation. In Proc. CVPR. 2287–2296. ----------------------------- pSp
 
 
-###    CanonicalEncoder : 2 Layer MLP
+##   TemporalFusion : Single 1D convolution Layer 
+        Apply a single 1D Conv over temporal features from different modalities independently. Then Fuse these modalities together.
 
-###    TemporalFusion : Single 1D convolution Layer
+        Temporal aggregation : Combining information over time to create a more compact representation of temporal data.
+                               This process is often used to reduce the temporal resolution of a time series or sequence
+                               while retaining essential information. eg., Applying pooling on temporal data (along channelwise).
+
+        Modality Fusion : eg., Concatenating diffent modality features and applying a Linear layer.
+
+        1. EPIC-Fusion: Audio-Visual Temporal Binding for Egocentric Action Recognition
+        2. TCN : Temporal Convolutional Networks: A Unified Approach to Action Segmentation
+
+###    CanonicalEncoder : 2 Layer MLP
 
 ###    Decoder : StyleGAN2 Generator
 
@@ -86,13 +96,13 @@
 
 
 ### Status :
-        1. Canonical Encoder : Done
-        2. Motion Encoder : Done 
+        1. Canonical Encoder : Done (approx. , need to figure out the layer and sizes)
+        2. Motion Encoder : Done (approx. , need to figure out the layer and sizes)
         3. Temporal Fusion : Need to understand the concept behind it. (Number of layer)
-        4. Decoder : Done
-        5. Visual Encoder : Done
+        4. Decoder : Done (approx. , need to figure out the layer and sizes)
+        5. Visual Encoder : Done (approx. , need to figure out the layer and sizes)
         6. Audio Encoder : Need to understand the concept behind it.
 
 ### To Do next: 
-        1. Audio Encoder - Reading paper referenced 
-        2. Temporal Fusion - Finding paper related to it
+        1. Audio Encoder - Reading paper referenced (read Wav2Lip)
+        2. Temporal Fusion - Finding paper related to it (process)

@@ -9,7 +9,7 @@ def plot_mel_spectrogram(audio_path, hop_length=200):
     y, sr = librosa.load(audio_path, sr=16000)
 
     # Calculate mel spectrogram
-    mel_spec = librosa.feature.melspectrogram(y, sr=sr, hop_length=hop_length, n_mels=80)
+    mel_spec = librosa.feature.melspectrogram(y, sr=sr, n_fft = 100, hop_length=hop_length, n_mels=80)
 
     # Convert to decibels (log scale)
     mel_spec_db = librosa.amplitude_to_db(mel_spec, ref=np.max)
