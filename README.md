@@ -2,6 +2,11 @@
 ### export PYTHONPATH="./" sets the current directory as project root.
 
 ## AudioEncoder : 
+        The Spectrum is the set of frequencies that are combined together to produce a signal. The Spectrum plots all of the frequencies that are present in the signal along with the strength or amplitude of each frequency.
+
+        Spectrograms are produced using Fourier Transforms to decompose any signal into its constituent frequencies.
+        
+        A Spectrogram chops up the duration of the sound signal into smaller time segments and then applies the Fourier Transform to each segment, to determine the frequencies contained in that segment
 
         For the audio source, we downsample the audio to 16kHz, then convert the downsampled audio to mel-spectrograms with a window size of 800, 
         a hop length of 200, and 80 Mel filter banks.

@@ -9,7 +9,7 @@ class TemporalFusion(nn.Module):
         input_size = opts.temporal_fusion_input_size
         output_size = opts.temporal_fusion_output_size
         kernel_size = opts.temporal_fusion_kernel_size
-        self.conv1d = nn.Conv1d(in_channels=input_size, out_channels=output_size, kernel_size=kernel_size)
+        self.conv1d = nn.Conv1d(in_channels=input_size, out_channels=output_size, kernel_size=kernel_size, padding=1)
 
     def forward(self, x):
         x = self.conv1d(x)
@@ -17,13 +17,14 @@ class TemporalFusion(nn.Module):
     
 if __name__ == "__main__":
     # Instantiate the model
-    input_size = 3  # Number of input channels/features
-    output_size = 16  # Number of output channels/features
+    from Options.BaseOptions import opts
+    input_size = 36 * 512 # Number of input channels/feature
+    output_size = 18 * 512 # Number of output channels/features
     kernel_size = 3
-    model = TemporalFusion(input_size, output_size, kernel_size)
+    model = TemporalFusion(opts)
 
     # Dummy input data
-    dummy_input = torch.randn((32, input_size, 10))  # Batch size of 32, input sequence length of 10
+    dummy_input = torch.randn((1, 36, 512))  # Batch size of 32
 
     # Forward pass
     output = model(dummy_input)

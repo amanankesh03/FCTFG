@@ -160,7 +160,7 @@ class GradualStyleEncoder(Module):
            
 
         out = torch.stack(latents, dim=1)
-        return out
+        return out.view(out.shape[0], -1, out.shape[-1])
 
 
 class BackboneEncoderUsingLastLayerIntoW(Module):

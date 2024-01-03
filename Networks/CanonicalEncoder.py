@@ -15,11 +15,9 @@ class CanonicalEncoder(nn.Module):
         self.fc2 = nn.Linear(hidden_size, output_size)  # Fully connected layer 2
 
     def forward(self, x):
-        with torch.autograd.profiler.record_function('input'):
-            x = self.fc1(x)
-            x = self.relu(x)
-            x = self.fc2(x)
-
+        x = self.fc1(x)
+        x = self.relu(x)
+        x = self.fc2(x)
         return x
 
 if __name__ == "__main__":

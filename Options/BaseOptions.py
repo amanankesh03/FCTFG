@@ -40,8 +40,8 @@ parser.add_argument('--motion_encoder_hidden_sizes', default=(18 * 512, 18 * 512
 
 
 ### Temporal Fusion Options ###
-parser.add_argument('--temporal_fusion_input_size', default=18 * 512, type=int, help='Number of input neurons')
-parser.add_argument('--temporal_fusion_output_size', default=18 * 512, type=int, help='Number of output neurons')
+parser.add_argument('--temporal_fusion_input_size', default=18, type=int, help='Number of input neurons')
+parser.add_argument('--temporal_fusion_output_size', default=18, type=int, help='Number of output neurons')
 parser.add_argument('--temporal_fusion_kernel_size', default=3, type=int, help='Number of hidden neurons')
 
 
