@@ -45,8 +45,6 @@ class AudioEncoder(nn.Module):
             nn.Conv2d(512, 512, kernel_size=1, stride=1, padding=0)
         ]
         
-    
-        # self.audio_encoder = nn.Sequential()
         self.convlist = [conv.to(opts.device) for conv in self.convlist]
     
     def forward(self, x):
@@ -60,4 +58,5 @@ if __name__ == "__main__":
     ae = AudioEncoder(opts)
     a = torch.randn([1, 2, 80, 17]).to(opts.device)
     print(ae(a).shape)
+    print()
     
