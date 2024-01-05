@@ -2,6 +2,7 @@
 ### export PYTHONPATH="./" sets the current directory as project root.
 
 ## AudioEncoder : 
+
         The Spectrum is the set of frequencies that are combined together to produce a signal. The Spectrum plots all of the frequencies that are present in the signal along with the strength or amplitude of each frequency.
 
         Spectrograms are produced using Fourier Transforms to decompose any signal into its constituent frequencies.
@@ -15,6 +16,9 @@
         InProc. ACM MM. 484–492. ---------------------------------------------------------- Wav2Lip
         
         2 . https://towardsdatascience.com/audio-deep-learning-made-simple-part-1-state-of-the-art-techniques-da1d3dff2504
+
+        ** Batchnorm2d channel should be the last which in this case is time
+        ** A batch (b, w, h, c) --> (b, 1, m, t)
         
 #### MFCC: Mel Frequency Cepstral Coefficients
 
@@ -62,6 +66,7 @@
 
         1. EPIC-Fusion: Audio-Visual Temporal Binding for Egocentric Action Recognition
         2. TCN : Temporal Convolutional Networks: A Unified Approach to Action Segmentation
+        
 
 ###    CanonicalEncoder : 2 Layer MLP
 
@@ -91,6 +96,8 @@
 ### SyncNet :   
         1. Joon Son Chung and Andrew Zisserman. 2017. Out of time: automated lip sync in the wild. 
         In Proc. ACCV. Springer, 251–263.
+        2.Dongchan Min, Minyoung Song, and Sung Ju Hwang. 2022. StyleTalker: Oneshot Style-based Audio-driven 
+        Talking Head Video Generation. arXiv preprint arXiv:2208.10922 (2022).
 
 ### VGG : 
         1. Richard Zhang, Phillip Isola, Alexei A Efros, Eli Shechtman, and Oliver Wang. 2018. The unreasonable effectiveness of deep features as a perceptual metric. InProc. CVPR. 586–595.
@@ -101,13 +108,45 @@
 
 
 ### Status :
-        1. Canonical Encoder : Done (approx. , need to figure out the layer and sizes)
-        2. Motion Encoder : Done (approx. , need to figure out the layer and sizes)
-        3. Temporal Fusion : Need to understand the concept behind it. (Number of layer)
-        4. Decoder : Done (approx. , need to figure out the layer and sizes)
-        5. Visual Encoder : Done (approx. , need to figure out the layer and sizes)
-        6. Audio Encoder : Need to understand the concept behind it.
 
-### To Do next: 
-        1. Audio Encoder - Reading paper referenced (read Wav2Lip)
-        2. Temporal Fusion - Finding paper related to it (process)
+#### Networks : 
+                1. Canonical Encoder : Done (approx. , need to figure out the layer and sizes)
+                2. Motion Encoder : Done (approx. , need to figure out the layer and sizes)
+                3. Temporal Fusion :  Done (approx. , need to figure out the layer and sizes)
+                4. Decoder : Done (approx. , need to figure out the layer and sizes)
+                5. Visual Encoder : Done (approx. , need to figure out the layer and sizes)
+                6. Audio Encoder :  Done (approx. , need to figure out the layer and sizes)
+                7. Visual Encoder Helper : done
+                8. utils : done
+
+#### Losses : 
+                1. Sync Loss : to do
+                2. VGG19 Loss: to do
+                3. Orthogonality Loss : to do
+                4. Identity Loss : to do
+                5. Reconstruction Loss : done
+                6. Adversarial loss : done
+
+#### Preprocess :
+
+                1. Audio PreProcess : Done
+                2. Video PreProcess : to do
+
+#### Training : 
+                1.trainer : basic code is done need to add losses
+                2.train : to do
+
+#### Options : 
+                1. BaseOptions : done
+
+
+#### To Do next: 
+
+        1. Audio Encoder - To Reading paper referenced (read Wav2Lip)
+        2. Temporal Fusion - Finding paper related to it 
+
+#### Dataset:
+
+        1. Video, Audio Length ?
+        2. If a random frame is selected as input then mel-spectrum should be centered at the frame, How to do that?
+        3. what will be the window length (size of mel-spectrum [-2 sec,  +2 sec])

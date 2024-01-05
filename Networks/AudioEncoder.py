@@ -25,7 +25,7 @@ class AudioEncoder(nn.Module):
         super(AudioEncoder, self).__init__()
 
         self.convlist = [
-            Conv2d(1, 32, kernel_size=3, stride=1, padding=1),
+            Conv2d(2, 32, kernel_size=3, stride=1, padding=1),
             Conv2d(32, 32, kernel_size=3, stride=1, padding=1, residual=True),
             Conv2d(32, 32, kernel_size=3, stride=1, padding=1, residual=True),
 
@@ -39,24 +39,25 @@ class AudioEncoder(nn.Module):
 
             Conv2d(128, 256, kernel_size=3, stride=(3, 2), padding=1),
             Conv2d(256, 256, kernel_size=3, stride=1, padding=1, residual=True),
-
-            Conv2d(256, 512, kernel_size=3, stride=(1, 3), padding=0),
-            Conv2d(512, 512, kernel_size=1, stride=1, padding=0),
+            
+            ######### without batchnorm2d ###########
+            nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=0),
+            nn.Conv2d(512, 512, kernel_size=1, stride=1, padding=0)
         ]
+        
     
         # self.audio_encoder = nn.Sequential()
         self.convlist = [conv.to(opts.device) for conv in self.convlist]
     
     def forward(self, x):
-        for conv in self.convlist:
+        for i,conv in enumerate(self.convlist):
             x = conv(x)
-            # print(x.shape)
-        x = x.squeeze(2)
-        return torch.permute(x, (0, 2, 1))
+        x = x.view(x.shape[0], -1, 512)
+        return x
     
 if __name__ == "__main__":
     from Options.BaseOptions import opts
     ae = AudioEncoder(opts)
-    a = torch.randn([1, 1, 80, 321])
+    a = torch.randn([1, 2, 80, 17]).to(opts.device)
     print(ae(a).shape)
     

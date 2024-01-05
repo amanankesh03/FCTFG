@@ -92,15 +92,16 @@ class GradualStyleEncoder(Module):
         self.coarse_ind = 3
         self.middle_ind = 7
         
-        self.spatial_mul = int(opts.size/256)
+        self.spatial_mul = int(opts.size/32)
+        assert self.spatial_mul >= 1 
         # style blocks
         for i in range(self.style_count):
             if i < self.coarse_ind:
-                style = GradualStyleBlock(512, 512, 16 * self.spatial_mul)
+                style = GradualStyleBlock(512, 512, 2 * self.spatial_mul)
             elif i < self.middle_ind:
-                style = GradualStyleBlock(512, 512, 32 * self.spatial_mul)
+                style = GradualStyleBlock(512, 512, 4 * self.spatial_mul)
             else:
-                style = GradualStyleBlock(512, 512, 64 * self.spatial_mul)
+                style = GradualStyleBlock(512, 512, 8 * self.spatial_mul)
             self.styles.append(style)
 
         # Latent Layers
@@ -141,8 +142,6 @@ class GradualStyleEncoder(Module):
                 c2 = x
             elif i == 23:
                 c3 = x
-        # print(c1.shape, c2.shape, c3.shape)
-        # print(afdfadf)
 
         for j in range(self.coarse_ind):
             latents.append(self.styles[j](c3))

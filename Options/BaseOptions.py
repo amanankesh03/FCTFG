@@ -34,7 +34,7 @@ parser.add_argument('--canonical_encoder_hidden_size', default=18 * 512, type=in
 
 
 ### Motion Encoder Options ###
-parser.add_argument('--motion_encoder_input_size', default=2 * 18 * 512, type=int, help='Number of input neurons')
+parser.add_argument('--motion_encoder_input_size', default=(1 +  18 ) * 512, type=int, help='Number of input neurons')
 parser.add_argument('--motion_encoder_output_size', default=18 * 512, type=int, help='Number of output neurons')
 parser.add_argument('--motion_encoder_hidden_sizes', default=(18 * 512, 18 * 512), type=tuple, help='Number of hidden neurons')
 
