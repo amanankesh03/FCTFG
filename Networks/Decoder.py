@@ -3,7 +3,7 @@ import random
 import torch
 from torch import nn
 from torch.nn import functional as F
-from utils import *
+from Networks.utils import *
 
 ## StyleGAN Generator
 
@@ -13,7 +13,7 @@ class Decoder(nn.Module):
 
         # size = opts.decoder_size
         # style_dim = opts.decoder_style_dim
-        self.size = opts.decoder_size
+        self.size = opts.size
         self.style_dim = opts.decoder_latent_dim_style
 
         channel_multiplier= opts.decoder_channel_multiplier #2
@@ -110,7 +110,7 @@ class Decoder(nn.Module):
             noise=None,
             randomize_noise=True,
     ):
-
+        print(f'decoder styles.shape : {styles.shape}')
         if noise is None:
             if randomize_noise:
                 noise = [None] * self.num_layers
@@ -142,7 +142,7 @@ class Decoder(nn.Module):
             out = conv1(out, latent[:, i], noise=noise1)
             out = conv2(out, latent[:, i + 1], noise=noise2)
             skip = to_rgb(out, latent[:, i + 2], skip)
-            i +=2
+            i+=2
 
         image = skip
 

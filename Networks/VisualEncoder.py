@@ -4,8 +4,8 @@ import numpy as np
 from torch import nn
 import torch.nn.functional as F
 from torch.nn import Linear, Conv2d, BatchNorm2d, PReLU, Sequential, Module
-from VisualEncoderHelper import get_blocks, Flatten, bottleneck_IR, bottleneck_IR_SE
-from utils import EqualLinear
+from Networks.VisualEncoderHelper import get_blocks, Flatten, bottleneck_IR, bottleneck_IR_SE
+from Networks.utils import EqualLinear
 
 
 ## StyleGAN Inversion Network
@@ -88,7 +88,8 @@ class GradualStyleEncoder(Module):
         self.body = Sequential(*modules)
 
         self.styles = nn.ModuleList()
-        self.style_count = opts.visual_n_styles
+        self.style_count = int(math.log(opts.size, 2) * 2 - 2)
+   
         self.coarse_ind = 3
         self.middle_ind = 7
         
@@ -235,7 +236,6 @@ class BackboneEncoderUsingLastLayerIntoWPlus(Module):
 if __name__ == '__main__':
     from Options.BaseOptions import opts
     device = 'cuda:0'
-    opts.size *= 2
     ve = VisualEncoder(opts).to(device)
     s = opts.size 
     xs = torch.randn([1, 3, s, s]).to(device)

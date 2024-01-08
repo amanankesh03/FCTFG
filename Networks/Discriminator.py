@@ -2,13 +2,14 @@ import math
 import torch
 from torch.nn import functional as F
 from torch import nn
-from utils import *
+from Networks.utils import *
 
 class Discriminator(nn.Module):
-    def __init__(self, size, channel_multiplier=1, blur_kernel=[1, 3, 3, 1]):
+    def __init__(self, opts, blur_kernel=[1, 3, 3, 1]):
         super().__init__()
 
-        self.size = size
+        size = opts.size
+        channel_multiplier = opts.channel_multiplier
 
         channels = {
             4: 512,

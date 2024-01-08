@@ -19,10 +19,10 @@ class Trainer(nn.Module):
 
         self.args = args
         self.batch_size = args.batch_size
-
-        self.gen = Generator(args.size, args.latent_dim_style, args.latent_dim_motion, args.channel_multiplier).to(
+        self.device = device
+        self.gen = Generator(args).to(
             device)
-        self.dis = Discriminator(args.size, args.channel_multiplier).to(device)
+        self.dis = Discriminator(args).to(device)
 
         # distributed computing
         self.gen = DDP(self.gen, device_ids=[rank], find_unused_parameters=True)
@@ -43,7 +43,7 @@ class Trainer(nn.Module):
             betas=(0 ** d_reg_ratio, 0.99 ** d_reg_ratio)
         )
 
-        self.criterion_vgg = VGGLoss().to(rank)
+        # self.criterion_vgg = VGGLoss().to(rank)
 
     def g_nonsaturating_loss(self, fake_pred):
         return F.softplus(-fake_pred).mean()
@@ -54,18 +54,20 @@ class Trainer(nn.Module):
 
         return real_loss.mean() + fake_loss.mean()
 
-    def gen_update(self, img_source, img_target):
+    def gen_update(self, img_source, img_targets, spectrogram):
+        vgg_loss = torch.zeros([1]).to(self.device)
+        gan_g_loss = torch.zeros([1]).to(self.device)
         self.gen.train()
         self.gen.zero_grad()
 
         requires_grad(self.gen, True)
         requires_grad(self.dis, False)
 
-        img_target_recon = self.gen(img_source, img_target)
+        img_target_recon, _, _, _ = self.gen(img_source, img_targets, spectrogram)
         img_recon_pred = self.dis(img_target_recon)
-
-        vgg_loss = self.criterion_vgg(img_target_recon, img_target).mean()
-        l1_loss = F.l1_loss(img_target_recon, img_target)
+        
+        # vgg_loss = self.criterion_vgg(img_target_recon, img_targets[:, -1]).mean()
+        l1_loss = F.l1_loss(img_target_recon, img_targets[:, -1])
         gan_g_loss = self.g_nonsaturating_loss(img_recon_pred)
 
         g_loss = vgg_loss + l1_loss + gan_g_loss
@@ -90,14 +92,14 @@ class Trainer(nn.Module):
 
         return d_loss
 
-    def sample(self, img_source, img_target):
+    def sample(self, img_source, img_targets, spectrogram):
         with torch.no_grad():
             self.gen.eval()
 
-            img_recon = self.gen(img_source, img_target)
-            img_source_ref = self.gen(img_source, None)
+            img_recon, _, _, _ = self.gen(img_source, img_targets, spectrogram)
+            # img_source_ref = self.gen(img_source, None)
 
-        return img_recon, img_source_ref
+        return img_recon
 
     def resume(self, resume_ckpt):
         print("load model:", resume_ckpt)

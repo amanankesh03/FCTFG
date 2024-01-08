@@ -90,6 +90,7 @@ class VGGLoss(nn.Module):
         self.weights = (10, 10, 10, 10, 10)
 
     def forward(self, img_recon, img_real):
+        print(f'img recon {img_recon.shape}, {img_real.shape}')
 
         # vgg loss
         pyramid_real = self.pyramid(img_real)

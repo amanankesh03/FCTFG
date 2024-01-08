@@ -6,6 +6,8 @@ from Dataset import FCTFG
 import torchvision
 import torchvision.transforms as transforms
 from Trainer import Trainer
+
+
 from torch.utils.tensorboard import SummaryWriter
 import torch.distributed as dist
 import torch.multiprocessing as mp
@@ -70,8 +72,8 @@ def main(rank, world_size, args):
         transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))]
     )
     
-    dataset_train = FCTFG('train', transform)
-    dataset_test = FCTFG('test', transform)
+    dataset_train = FCTFG('train', transform, args)
+    dataset_test = FCTFG('test', transform, args)
 
     loader = data.DataLoader(
         dataset_train,
@@ -85,7 +87,7 @@ def main(rank, world_size, args):
     loader_test = data.DataLoader(
         dataset_test,
         num_workers=8,
-        batch_size=4,
+        batch_size=2,
         sampler=data.distributed.DistributedSampler(dataset_test, num_replicas=world_size, rank=rank, shuffle=False),
         pin_memory=True,
         drop_last=False,
@@ -95,6 +97,7 @@ def main(rank, world_size, args):
     loader_test = sample_data(loader_test)
 
     print('==> initializing trainer')
+    
     # Trainer
     trainer = Trainer(args, device, rank)
 
@@ -109,15 +112,15 @@ def main(rank, world_size, args):
         i = idx + args.start_iter
 
         # laoding data
-        img_source, img_target = next(loader)
+        img_source, img_targets, spectrogram = next(loader)
         img_source = img_source.to(rank, non_blocking=True)
-        img_target = img_target.to(rank, non_blocking=True)
+        img_targets = img_targets.to(rank, non_blocking=True)
 
         # update generator
-        vgg_loss, l1_loss, gan_g_loss, img_recon = trainer.gen_update(img_source, img_target)
+        vgg_loss, l1_loss, gan_g_loss, img_recon = trainer.gen_update(img_source, img_targets, spectrogram)
 
         # update discriminator
-        gan_d_loss = trainer.dis_update(img_target, img_recon)
+        gan_d_loss = trainer.dis_update(img_targets[:, 0], img_recon)
 
         if rank == 0:
             # write to log
@@ -129,15 +132,15 @@ def main(rank, world_size, args):
                   % (i, args.iter, vgg_loss.item(), l1_loss.item(), gan_g_loss.item(), gan_d_loss.item()))
 
             if rank == 0:
-                img_test_source, img_test_target = next(loader_test)
+                img_test_source, img_test_targets, spectrogram = next(loader_test)
                 img_test_source = img_test_source.to(rank, non_blocking=True)
-                img_test_target = img_test_target.to(rank, non_blocking=True)
+                img_test_targets = img_test_targets.to(rank, non_blocking=True)
 
-                img_recon, img_source_ref = trainer.sample(img_test_source, img_test_target)
+                img_recon = trainer.sample(img_test_source, img_test_targets, spectrogram)
                 display_img(i, img_test_source, 'source', writer)
-                display_img(i, img_test_target, 'target', writer)
+                display_img(i, img_test_targets[:, -1], 'target', writer)
                 display_img(i, img_recon, 'recon', writer)
-                display_img(i, img_source_ref, 'source_ref', writer)
+
                 writer.flush()
 
         # save model
@@ -152,7 +155,7 @@ if __name__ == "__main__":
     from Options.BaseOptions import opts
 
     n_gpus = torch.cuda.device_count()
-    assert n_gpus >= 2
+    assert n_gpus >= 1
 
     world_size = n_gpus
     print('==> training on %d gpus' % n_gpus)
