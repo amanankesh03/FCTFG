@@ -42,8 +42,8 @@ class Trainer(nn.Module):
             lr=args.lr * d_reg_ratio,
             betas=(0 ** d_reg_ratio, 0.99 ** d_reg_ratio)
         )
-
-        # self.criterion_vgg = VGGLoss().to(rank)
+        self.ortholoss = OrthogonalityLoss()
+        self.criterion_vgg = VGGLoss().to(rank)
 
     def g_nonsaturating_loss(self, fake_pred):
         return F.softplus(-fake_pred).mean()
@@ -66,8 +66,12 @@ class Trainer(nn.Module):
 
         img_target_recon, z_s_c, z_c_d, _ = self.gen(img_source, img_targets, spectrogram)
         img_recon_pred = self.dis(img_target_recon)
-        ortholoss = OrthogonalityLoss(z_s_c, z_c_d)
-        # vgg_loss = self.criterion_vgg(img_target_recon, img_targets[:, -1]).mean()
+
+        print(f'trainer 69 : {z_c_d.shape, z_s_c.shape}')
+        
+        ortholoss = self.ortholoss(z_s_c, z_c_d, self.device)
+        vgg_loss = self.criterion_vgg(img_target_recon, img_targets[:, -1]).mean()
+        
         l1_loss = F.l1_loss(img_target_recon, img_targets[:, -1])
         gan_g_loss = self.g_nonsaturating_loss(img_recon_pred)
 
@@ -79,7 +83,6 @@ class Trainer(nn.Module):
             "l1_loss" : l1_loss,
             "gan_g_loss" : gan_g_loss,
             "ortholoss" : ortholoss,
-            
         }
 
         g_loss.backward()

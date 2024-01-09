@@ -28,30 +28,28 @@ class Generator(nn.Module):
         print(f'visualEncoder s out : {zss.shape}')
         assert zss.shape == torch.Size([bs, self.n_styles, self.latent_dim])
 
-        
+        zss = self.flatten(zss)
+        print(f'z_s flatten {zss.shape}')
+        assert zss.shape == torch.Size([bs, self.n_styles * self.latent_dim])
+
+        zscs = self.CanonicalEncoder(zss)
+        print(f'canonicalEncoder out : {zscs.shape}')
+        assert zscs.shape == torch.Size([bs, self.n_styles * self.latent_dim])
+
         zas = self.AudioEncoder(xas)
         print(f'audioEncoder out : {zas.shape}')
         assert zas.shape == torch.Size([bs, 1, self.latent_dim])
 
         zfs = []
-
+        zcds = []
         for i, batch in enumerate(xds):
-            z_s = zss[i].unsqueeze(0)
+            z_s_c = zscs[i].unsqueeze(0)
             z_a = zas[i].unsqueeze(0)
             nf = batch.shape[0]
 
             z_d = self.VisualEncoder(batch)
             print(f'visualEncoder d out : {z_d.shape}')
             assert z_d.shape == torch.Size([nf, self.n_styles, self.latent_dim])
-            
-            z_s = self.flatten(z_s)
-            print(f'z_s flatten {z_s.shape}')
-            assert z_s.shape == torch.Size([1, self.n_styles * self.latent_dim])
-
-            z_s_c = self.CanonicalEncoder(z_s)
-            print(f'canonicalEncoder out : {z_s_c.shape}')
-            assert z_s_c.shape == torch.Size([1, self.n_styles * self.latent_dim])
-
             
             z_a = z_a.repeat(nf, 1, 1)
             z_d_a = torch.cat([z_d, z_a], dim=1)
@@ -76,14 +74,16 @@ class Generator(nn.Module):
             print(f'temporal fusion out {z_f.shape}')
             
             zfs.append(z_f.squeeze(0))
+            zcds.append(z_c_d)
 
         zfs = torch.stack(zfs, dim=0)
+        zcds = torch.stack(zcds, dim=0)
 
         im, latents = self.Decoder(zfs)
         print(f'Decoder out {im.shape}')
 
         # return [z_s_c, z_c_d] for orthogonality loss
-        return im, z_s_c, z_c_d, latents
+        return im, zscs.view(bs, self.n_styles, self.latent_dim), zcds, latents
     
 if __name__ == "__main__":
 
@@ -126,7 +126,7 @@ if __name__ == "__main__":
     x_a = x_a.to(device)
     print(x_s.shape)
     # torchsummary.summary(gen, x_s, x_d, x_a)
-    im, latents, z_s_c, z_c_d  = gen(x_s, x_d, x_a)
+    im, z_s_c, z_c_d, latents  = gen(x_s, x_d, x_a)
     print(im.shape, z_s_c.shape, z_c_d.shape)
 
          

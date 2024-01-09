@@ -1,9 +1,19 @@
 import torch
+import torch.nn as nn
 
-def OrthogonalityLoss(src, tgts):
-    loss = torch.zeros([1])
-    for tgt in tgts:
-        for (sv, tv) in zip(src, tgt):
-            loss += torch.dot(src, tgt)
+class OrthogonalityLoss(nn.Module):
+    def __init__(self):
+        super(OrthogonalityLoss, self).__init__()
 
-    return loss
+
+    def forward(self, src, tgts, device):
+        loss = torch.zeros([1]).to(device)
+        for i, batch in enumerate(tgts):
+            s = src[i]
+            print(src.shape, tgts.shape)
+            
+            for tgt in batch:
+                for (sv, tv) in zip(s, tgt):
+                    print(sv.shape, tv.shape)
+                    loss += torch.dot(sv, tv)
+        return loss
