@@ -6,7 +6,7 @@ from Loss.VGG_loss import VGGLoss
 from Networks.Generator import Generator
 from Networks.Discriminator import Discriminator
 from torch.nn.parallel import DistributedDataParallel as DDP
-
+from Loss.Orthogonality import OrthogonalityLoss
 
 def requires_grad(net, flag=True):
     for p in net.parameters():
@@ -57,20 +57,30 @@ class Trainer(nn.Module):
     def gen_update(self, img_source, img_targets, spectrogram):
         vgg_loss = torch.zeros([1]).to(self.device)
         gan_g_loss = torch.zeros([1]).to(self.device)
+        
         self.gen.train()
         self.gen.zero_grad()
 
         requires_grad(self.gen, True)
         requires_grad(self.dis, False)
 
-        img_target_recon, _, _, _ = self.gen(img_source, img_targets, spectrogram)
+        img_target_recon, z_s_c, z_c_d, _ = self.gen(img_source, img_targets, spectrogram)
         img_recon_pred = self.dis(img_target_recon)
-        
+        ortholoss = OrthogonalityLoss(z_s_c, z_c_d)
         # vgg_loss = self.criterion_vgg(img_target_recon, img_targets[:, -1]).mean()
         l1_loss = F.l1_loss(img_target_recon, img_targets[:, -1])
         gan_g_loss = self.g_nonsaturating_loss(img_recon_pred)
 
-        g_loss = vgg_loss + l1_loss + gan_g_loss
+        g_loss = vgg_loss + l1_loss + gan_g_loss + ortholoss
+
+        loss_dict = {
+
+            "vgg_loss" : vgg_loss,
+            "l1_loss" : l1_loss,
+            "gan_g_loss" : gan_g_loss,
+            "ortholoss" : ortholoss,
+            
+        }
 
         g_loss.backward()
         self.g_optim.step()

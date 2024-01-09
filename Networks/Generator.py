@@ -83,7 +83,7 @@ class Generator(nn.Module):
         print(f'Decoder out {im.shape}')
 
         # return [z_s_c, z_c_d] for orthogonality loss
-        return im, latents, z_s_c, z_c_d
+        return im, z_s_c, z_c_d, latents
     
 if __name__ == "__main__":
 
@@ -91,6 +91,7 @@ if __name__ == "__main__":
     from Dataset import FCTFG
     from torch.utils import data
     import torchvision
+    # import torchsummary
     import torchvision.transforms as transforms
 
     opts.size = 128 * 2
@@ -116,7 +117,7 @@ if __name__ == "__main__":
         pin_memory=True,
         drop_last=False,
     )
-
+    
     loader = sample_data(loader)
     gen = Generator(opts).to(device)
     x_s, x_d, x_a = next(loader)
@@ -124,7 +125,7 @@ if __name__ == "__main__":
     x_d = x_d.to(device)
     x_a = x_a.to(device)
     print(x_s.shape)
-
+    # torchsummary.summary(gen, x_s, x_d, x_a)
     im, latents, z_s_c, z_c_d  = gen(x_s, x_d, x_a)
     print(im.shape, z_s_c.shape, z_c_d.shape)
 

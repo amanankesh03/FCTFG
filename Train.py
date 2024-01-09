@@ -109,44 +109,51 @@ def main(rank, world_size, args):
     print('==> training')
     pbar = range(args.iter)
     for idx in pbar:
-        i = idx + args.start_iter
+        try: 
+            i = idx + args.start_iter
 
-        # laoding data
-        img_source, img_targets, spectrogram = next(loader)
-        img_source = img_source.to(rank, non_blocking=True)
-        img_targets = img_targets.to(rank, non_blocking=True)
+            # loading data
+            img_source, img_targets, spectrogram = next(loader)
+            img_source = img_source.to(rank, non_blocking=True)
+            img_targets = img_targets.to(rank, non_blocking=True)
 
-        # update generator
-        vgg_loss, l1_loss, gan_g_loss, img_recon = trainer.gen_update(img_source, img_targets, spectrogram)
+            # update generator
+            vgg_loss, l1_loss, gan_g_loss, img_recon = trainer.gen_update(img_source, img_targets, spectrogram)
 
-        # update discriminator
-        gan_d_loss = trainer.dis_update(img_targets[:, 0], img_recon)
-
-        if rank == 0:
-            # write to log
-            write_loss(idx, vgg_loss, l1_loss, gan_g_loss, gan_d_loss, writer)
-
-        # display
-        if i % args.display_freq == 0 and rank == 0:
-            print("[Iter %d/%d] [vgg loss: %f] [l1 loss: %f] [g loss: %f] [d loss: %f]"
-                  % (i, args.iter, vgg_loss.item(), l1_loss.item(), gan_g_loss.item(), gan_d_loss.item()))
+            # update discriminator
+            gan_d_loss = trainer.dis_update(img_targets[:, 0], img_recon)
 
             if rank == 0:
-                img_test_source, img_test_targets, spectrogram = next(loader_test)
-                img_test_source = img_test_source.to(rank, non_blocking=True)
-                img_test_targets = img_test_targets.to(rank, non_blocking=True)
+                # write to log
+                write_loss(idx, vgg_loss, l1_loss, gan_g_loss, gan_d_loss, writer)
 
-                img_recon = trainer.sample(img_test_source, img_test_targets, spectrogram)
-                display_img(i, img_test_source, 'source', writer)
-                display_img(i, img_test_targets[:, -1], 'target', writer)
-                display_img(i, img_recon, 'recon', writer)
+            # display
+            if i % args.display_freq == 0 and rank == 0:
+                print("[Iter %d/%d] [vgg loss: %f] [l1 loss: %f] [g loss: %f] [d loss: %f]"
+                    % (i, args.iter, vgg_loss.item(), l1_loss.item(), gan_g_loss.item(), gan_d_loss.item()))
 
-                writer.flush()
+                if rank == 0:
+                    img_test_source, img_test_targets, spectrogram = next(loader_test)
+                    img_test_source = img_test_source.to(rank, non_blocking=True)
+                    img_test_targets = img_test_targets.to(rank, non_blocking=True)
 
-        # save model
-        if i % args.save_freq == 0 and rank == 0:
-            trainer.save(i, checkpoint_path)
+                    img_recon = trainer.sample(img_test_source, img_test_targets, spectrogram)
+                    display_img(i, img_test_source, 'source', writer)
+                    display_img(i, img_test_targets[:, -1], 'target', writer)
+                    display_img(i, img_recon, 'recon', writer)
 
+                    writer.flush()
+            
+
+            # save model
+            if i % args.save_freq == 0 and rank == 0:
+                trainer.save(i, checkpoint_path)
+        
+        except Exception as e:
+            print(e)
+            if rank == 0:
+                trainer.save(i, checkpoint_path)
+                break
     return
 
 
