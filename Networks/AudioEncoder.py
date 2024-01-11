@@ -23,9 +23,9 @@ class Conv2d(nn.Module):
 class AudioEncoder(nn.Module):
     def __init__(self, opts):
         super(AudioEncoder, self).__init__()
-
+        self.audio_channels = opts.audio_encoder_input_channels
         self.convlist = [
-            Conv2d(2, 32, kernel_size=3, stride=1, padding=1),
+            Conv2d(self.audio_channels, 32, kernel_size=3, stride=1, padding=1),
             Conv2d(32, 32, kernel_size=3, stride=1, padding=1, residual=True),
             Conv2d(32, 32, kernel_size=3, stride=1, padding=1, residual=True),
 

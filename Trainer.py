@@ -54,7 +54,7 @@ class Trainer(nn.Module):
 
         return real_loss.mean() + fake_loss.mean()
 
-    def gen_update(self, img_source, img_targets, spectrogram):
+    def gen_update(self, imgs, spectrogram):
         vgg_loss = torch.zeros([1]).to(self.device)
         gan_g_loss = torch.zeros([1]).to(self.device)
         
@@ -64,31 +64,31 @@ class Trainer(nn.Module):
         requires_grad(self.gen, True)
         requires_grad(self.dis, False)
 
-        img_target_recon, z_s_c, z_c_d, _ = self.gen(img_source, img_targets, spectrogram)
+        img_target_recon, z_s_c, z_c_d, _ = self.gen(imgs, spectrogram)
         img_recon_pred = self.dis(img_target_recon)
 
-        print(f'trainer 69 : {z_c_d.shape, z_s_c.shape}')
+        # print(f'trainer 69 : {z_c_d.shape, z_s_c.shape}')
         
         ortholoss = self.ortholoss(z_s_c, z_c_d, self.device)
-        vgg_loss = self.criterion_vgg(img_target_recon, img_targets[:, -1]).mean()
+        vgg_loss = self.criterion_vgg(img_target_recon, imgs[:, -1]).mean()
         
-        l1_loss = F.l1_loss(img_target_recon, img_targets[:, -1])
+        l1_loss = F.l1_loss(img_target_recon, imgs[:, -1])
         gan_g_loss = self.g_nonsaturating_loss(img_recon_pred)
 
         g_loss = vgg_loss + l1_loss + gan_g_loss + ortholoss
 
         loss_dict = {
 
-            "vgg_loss" : vgg_loss,
-            "l1_loss" : l1_loss,
-            "gan_g_loss" : gan_g_loss,
-            "ortholoss" : ortholoss,
+            "vgg_loss" : vgg_loss.item(),
+            "l1_loss" : l1_loss.item(),
+            "gan_g_loss" : gan_g_loss.item(),
+            "ortholoss" : ortholoss.item(),
         }
 
         g_loss.backward()
         self.g_optim.step()
 
-        return vgg_loss, l1_loss, gan_g_loss, img_target_recon
+        return loss_dict, img_target_recon
 
     def dis_update(self, img_real, img_recon):
         self.dis.zero_grad()
@@ -105,13 +105,10 @@ class Trainer(nn.Module):
 
         return d_loss
 
-    def sample(self, img_source, img_targets, spectrogram):
+    def sample(self, imgs, spectrogram):
         with torch.no_grad():
             self.gen.eval()
-
-            img_recon, _, _, _ = self.gen(img_source, img_targets, spectrogram)
-            # img_source_ref = self.gen(img_source, None)
-
+            img_recon, _, _, _ = self.gen(imgs, spectrogram)
         return img_recon
 
     def resume(self, resume_ckpt):

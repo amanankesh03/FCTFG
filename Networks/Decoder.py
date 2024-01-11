@@ -110,7 +110,7 @@ class Decoder(nn.Module):
             noise=None,
             randomize_noise=True,
     ):
-        print(f'decoder styles.shape : {styles.shape}')
+        # print(f'decoder styles.shape : {styles.shape}')
         if noise is None:
             if randomize_noise:
                 noise = [None] * self.num_layers

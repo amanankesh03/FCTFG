@@ -86,11 +86,11 @@ class VGGLoss(nn.Module):
         self.pyramid = ImagePyramide(self.scales, 3).cuda()
 
         # vgg loss
-        self.vgg = VGG19().cuda()
+        self.vgg = VGG19().cuda().eval()
         self.weights = (10, 10, 10, 10, 10)
 
     def forward(self, img_recon, img_real):
-        print(f'img recon {img_recon.shape}, {img_real.shape}')
+        # print(f'img recon {img_recon.shape}, {img_real.shape}')
 
         # vgg loss
         pyramid_real = self.pyramid(img_real)
