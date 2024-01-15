@@ -27,6 +27,7 @@ class Generator(nn.Module):
 
         bs = xas.shape[0]
         zas = self.AudioEncoder(xas)
+        # self.details(zas)
         #print(f'audioEncoder out : {zas.shape}')
         #assert zas.shape == torch.Size([bs, 1, self.latent_dim])
 
@@ -41,8 +42,8 @@ class Generator(nn.Module):
             zs = self.VisualEncoder(xs)
             #print(f'visualEncoder s out : {zs.shape}')
             #assert zs.shape == torch.Size([nf, self.n_styles, self.latent_dim])
-            
             # source latents
+            # self.details(zs)e
             z_s = self.flatten(zs[:1])
             #print(f'z_s flatten {z_s.shape}')
             #assert z_s.shape == torch.Size([1, self.n_styles * self.latent_dim])
@@ -94,9 +95,14 @@ class Generator(nn.Module):
 
         im, latents = self.Decoder(zfs)
         # #print(f'Decoder out {im.shape}')
-
+        # self.details(im)
         # return [z_s_c, z_c_d] for orthogonality loss
         return im, zscs.view(bs, self.n_styles, self.latent_dim), zcds, latents
+    
+    def details(self, tensor):
+        print(f'shape of tensor : {tensor.shape}')
+        print(f'min, max : {torch.min(tensor), torch.max(tensor)}') 
+
     
 if __name__ == "__main__":
 
@@ -129,6 +135,7 @@ if __name__ == "__main__":
     
     loader = sample_data(loader)
     gen = Generator(opts).to(device)
+    print('here')
     sample = next(loader)
     for (x_s, x_a) in sample:
     
@@ -138,7 +145,7 @@ if __name__ == "__main__":
         # #print(x_s.shape)
         # torchsummary.summary(gen, x_s, x_d, x_a)
         im, z_s_c, z_c_d, latents  = gen(x_s, x_a)
-        #print(im.shape, z_s_c.shape, z_c_d.shape)
+        print(im.shape, z_s_c.shape, z_c_d.shape)
         break
 
          

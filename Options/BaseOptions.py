@@ -3,18 +3,18 @@ parser = argparse.ArgumentParser()
 
 ### Training Options ####
 parser.add_argument("--iter", type=int, default=800000, help='Number of image iterations')
-parser.add_argument("--size", type=int, default=256, help='Image size')
-parser.add_argument("--batch_size", type=int, default=6)
+parser.add_argument("--size", type=int, default=512, help='Image size')
+parser.add_argument("--batch_size", type=int, default=1)
 parser.add_argument("--start_iter", type=int, default=0)
-parser.add_argument("--resume_ckpt", type=str, default=None)
+parser.add_argument("--resume_ckpt", type=str, default='/home/zottang/working_dir/exps/15thJan2024/checkpoint/006000.pt')
 parser.add_argument("--port", type=str, default='12345')
 parser.add_argument("--addr", type=str, default='localhost')
 parser.add_argument("--exp_path", type=str, default='../exps/')
-parser.add_argument("--exp_name", type=str, default='v1')
+parser.add_argument("--exp_name", type=str, default='15thJan2024')
 parser.add_argument("--save_freq", type=int, default=1000)
 parser.add_argument("--display_freq", type=int, default=100)
-parser.add_argument("--train_dataset_path", type=str, default='/home/zottang/working_dir/Videos')
-parser.add_argument("--test_dataset_path", type=str, default='/home/zottang/working_dir/Videos')
+parser.add_argument("--train_dataset_path", type=str, default='/home/zottang/Data/training_data/trainset-eikitai1')
+parser.add_argument("--test_dataset_path", type=str, default='/home/zottang/Data/training_data/trainset-eikitai1')
 parser.add_argument("--num_frames", type=int, default=5)
 parser.add_argument("--device", type=str, default="cuda:0")
 parser.add_argument("--latent_dim", type=int, default=512)
@@ -52,7 +52,7 @@ parser.add_argument('--temporal_fusion_kernel_size', default=3, type=int, help='
 ### Generator Options
 parser.add_argument("--g_reg_every", type=int, default=4, help='generator regularization every nth iteration')
 parser.add_argument("--lr", type=float, default=0.002)
-parser.add_argument("--dis_update_every", type=int, default=16)
+parser.add_argument("--dis_update_every", type=int, default=50)
 
 
 ### Decoder Options ###

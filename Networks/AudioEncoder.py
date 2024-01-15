@@ -48,8 +48,9 @@ class AudioEncoder(nn.Module):
         self.convlist = [conv.to(opts.device) for conv in self.convlist]
     
     def forward(self, x):
-        for i,conv in enumerate(self.convlist):
+        for i, conv in enumerate(self.convlist):
             x = conv(x)
+        
         x = x.view(x.shape[0], -1, 512)
         return x
     

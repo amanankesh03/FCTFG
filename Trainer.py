@@ -55,8 +55,8 @@ class Trainer(nn.Module):
         return real_loss.mean() + fake_loss.mean()
 
     def gen_update(self, imgs, spectrogram):
-        vgg_loss = torch.zeros([1]).to(self.device)
-        gan_g_loss = torch.zeros([1]).to(self.device)
+        # vgg_loss = torch.zeros([1]).to(self.device)
+        # gan_g_loss = torch.zeros([1]).to(self.device)
         
         self.gen.train()
         self.gen.zero_grad()

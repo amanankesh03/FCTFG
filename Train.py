@@ -1,9 +1,9 @@
 import argparse
 import os
 import torch
-
+from tqdm import tqdm
 from torch.utils import data
-from Dataset import FCTFG
+# from Dataset import FCTFG
 from VideoDataset import FCTFG_VIDEO
 import torchvision
 import torchvision.transforms as transforms
@@ -78,18 +78,18 @@ def main(rank, world_size, args):
         dataset_train,
         num_workers=8,
         batch_size=args.batch_size // world_size,
-        sampler=data.distributed.DistributedSampler(dataset_train, num_replicas=world_size, rank=rank, shuffle=True),
+        sampler=data.distributed.DistributedSampler(dataset_train, num_replicas=world_size, rank=rank, shuffle=False),
         pin_memory=True,
-        drop_last=False,
+        drop_last=True,
     )
 
     loader_test = data.DataLoader(
         dataset_test,
         num_workers=8,
-        batch_size=2,
+        batch_size=1,
         sampler=data.distributed.DistributedSampler(dataset_test, num_replicas=world_size, rank=rank, shuffle=False),
         pin_memory=True,
-        drop_last=False,
+        drop_last=True,
     )
 
     loader = sample_data(loader)
@@ -106,23 +106,25 @@ def main(rank, world_size, args):
         print('==> resume from iteration %d' % (args.start_iter))
 
     print('==> training')
-    pbar = range(args.iter)
-    for idx in pbar:
-        i = idx + args.start_iter
-
+    pbar = tqdm(args.iter)
+    i = args.start_iter
+    for idx in range(args.iter):
         # loading data
         for sample in next(loader):
-
             # try:
             (imgs, mel) = sample
+            # print(mel.shape)
             imgs = imgs.to(rank)
             mel = mel.to(rank)
+
             # update generator
             loss_dict, img_recon = trainer.gen_update(imgs, mel)
+            # details(img_recon)
 
             # update discriminator
             if i%args.dis_update_every == 0:
                 gan_d_loss = trainer.dis_update(imgs[:, -1], img_recon)
+                loss_dict['gan_d_loss'] = gan_d_loss.item()
 
             # write to log
             if rank == 0:
@@ -142,21 +144,25 @@ def main(rank, world_size, args):
                         test_img_recon = trainer.sample(test_imgs, test_mel)
 
                         display_img(i, test_imgs[:, 0], 'source', writer)
-                        display_img(i, test_imgs[:, -1], 'target', writer)
+                        display_img(i, test_imgs[0, 1:], 'target', writer)
                         display_img(i, test_img_recon, 'recon', writer)
                         writer.flush()
             
-
+            i+=1
             # save model
             if i % args.save_freq == 0 and rank == 0:
                 trainer.save(i, checkpoint_path)
-            
+        pbar.update(1)
             # except Exception as e:
             #     print(e)
             #     if rank == 0:
             #         trainer.save(i, checkpoint_path)
             #         break
     return
+
+def details(tensor):
+    print(f'shape of tensor : {tensor.shape}')
+    print(f'min, max : {torch.min(tensor), torch.max(tensor)}') 
 
 
 if __name__ == "__main__":

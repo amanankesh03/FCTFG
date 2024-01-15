@@ -8,13 +8,13 @@ class OrthogonalityLoss(nn.Module):
 
 
     def forward(self, src, tgts, device):
-        loss = torch.zeros([1]).to(device)
-        for i, batch in enumerate(tgts):
-            s = src[i]
-            # print(src.shape, tgts.shape)
-            
-            for tgt in batch:
-                for (sv, tv) in zip(s, tgt):
-                    # print(sv.shape, tv.shape)
-                    loss += torch.abs(torch.dot(sv, tv))
-        return loss
+        src = src.unsqueeze(1).repeat(1, tgts.shape[1], 1, 1)
+        res = src * tgts
+        res = torch.sum(res, dim = 3)        
+        res = torch.abs(res)
+        res = res.mean()
+        return res
+    
+
+
+

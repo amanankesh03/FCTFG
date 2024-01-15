@@ -1,37 +1,38 @@
+file = '/home/zottang/Data/training_data/training_data/trainset-eikitai1/How to TRICK Your Interviewer into Hiring You_clip0022_000_with_audio.mp4'
+
+
+import subprocess
 import torch
-import torch.nn as nn
-import matplotlib.pyplot as plt
-import numpy as np
+from torchvision.io.video import read_video, write_video
 
-# Define a simple 1D convolutional layer
-conv1d = nn.Conv1d(in_channels=1, out_channels=1, kernel_size=3)
+def convert_video_fps(input_file, output_file, target_fps):
+    # Use FFmpeg to convert video FPS
+    ffmpeg_command = [
+        'ffmpeg',
+        '-i', input_file,
+        '-filter:v', f'fps={target_fps}',
+        '-c:a', 'copy',
+        '-strict', 'experimental',
+        output_file
+    ]
 
-# Create a 1D input signal
-input_signal = torch.tensor([1.0, 2.0, 3.0, 4.0, 5.0], dtype=torch.float32).view(1, 1, -1)  # Shape: [batch_size, channels, sequence_length]
+    subprocess.run(ffmpeg_command, check=True)
 
-# Perform 1D convolution
-output_signal = conv1d(input_signal)
+def read_video_tensor(file_path):
+    # Read video file into a PyTorch tensor
+    video, audio, info = read_video(file_path)
+    return video, audio, info
 
-# Convert tensors to numpy arrays for plotting
-input_signal_np = input_signal.squeeze().numpy()
-output_signal_np = output_signal.squeeze().detach().numpy()
+# Specify the file paths
 
-# Plot the input and output signals
-plt.figure(figsize=(10, 4))
+output_file = './tmp.mp4'
 
-# Plot input signal
-plt.subplot(2, 1, 1)
-plt.plot(input_signal_np, marker='o')
-plt.title('Input Signal')
-plt.xlabel('Index')
-plt.ylabel('Amplitude')
+# Convert video FPS using FFmpeg
+target_fps = 25
+convert_video_fps(file, output_file, target_fps)
 
-# Plot output signal
-plt.subplot(2, 1, 2)
-plt.plot(output_signal_np, marker='o')
-plt.title('Output Signal after 1D Convolution')
-plt.xlabel('Index')
-plt.ylabel('Amplitude')
+# Read the converted video into a PyTorch tensor
+video_tensor, _, _ = read_video_tensor(output_file)
 
-plt.tight_layout()
-plt.show()
+# Print the shape of the video tensor
+print("Video Tensor Shape:", video_tensor.shape)
