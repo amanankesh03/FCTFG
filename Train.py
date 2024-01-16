@@ -76,7 +76,7 @@ def main(rank, world_size, args):
 
     loader = data.DataLoader(
         dataset_train,
-        num_workers=8,
+        num_workers=4,
         batch_size=args.batch_size // world_size,
         sampler=data.distributed.DistributedSampler(dataset_train, num_replicas=world_size, rank=rank, shuffle=False),
         pin_memory=True,
@@ -85,7 +85,7 @@ def main(rank, world_size, args):
 
     loader_test = data.DataLoader(
         dataset_test,
-        num_workers=8,
+        num_workers=4,
         batch_size=1,
         sampler=data.distributed.DistributedSampler(dataset_test, num_replicas=world_size, rank=rank, shuffle=False),
         pin_memory=True,
@@ -144,7 +144,7 @@ def main(rank, world_size, args):
                         test_img_recon = trainer.sample(test_imgs, test_mel)
 
                         display_img(i, test_imgs[:, 0], 'source', writer)
-                        display_img(i, test_imgs[0, 1:], 'target', writer)
+                        display_img(i, test_imgs[:,-1], 'target', writer)
                         display_img(i, test_img_recon, 'recon', writer)
                         writer.flush()
             

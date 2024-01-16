@@ -42,14 +42,15 @@ class FCTFG_VIDEO(Dataset):
             self.num_of_samples_per_video = 20
         elif split == 'test':
             self.Data_path = self.args.test_dataset_path
-            self.num_of_samples_per_video = 1
+            self.num_of_samples_per_video = 5
         else:
             raise NotImplementedError
 
         # self.video_path = os.path.join(self.Data_path, 'video')
         # self.video_list = os.listdir(self.video_path)
         
-        self.video_list = glob.glob(f'{self.Data_path }/*.mov') + glob.glob(f'{self.Data_path }/*.mp4')
+        self.video_list = glob.glob(f'{self.Data_path }/**/*.mov', recursive=True) 
+        self.video_list += glob.glob(f'{self.Data_path }/**/*.mp4', recursive=True)
         # print(self.video_list)
 
         ########## Video #############
@@ -78,10 +79,13 @@ class FCTFG_VIDEO(Dataset):
 
         if abs(info['video_fps'] - 25.0) > 0:
             # print(video_path)
-            video = convert_video_to_tensor(video_path, self.video_fr, h, w)
-            info['video_fps'] = self.video_fr
+            try:
+                video = convert_video_to_tensor(video_path, self.video_fr, h, w)
+                info['video_fps'] = self.video_fr
             # print(f" video shape : {video.shape}")
-
+            except Exception as e:
+                print(e)
+                return [], audio, info
             # self.display_direct(video[1])
         
         return video.float(), audio, info
@@ -123,15 +127,14 @@ class FCTFG_VIDEO(Dataset):
             mel_sgram = self.mel_sgram_from_window(audio, info, start_frame=s, end_frame=e)
             
             if mel_sgram.shape != torch.Size([1, 80, 16]):
-                # i -= 1
                 continue
+
             samples.append((v_window, mel_sgram))
         if len(samples) != self.num_of_samples_per_video:
             print(f'samples {len(samples)}', )
         return samples
     
     def display_direct(self, img):
-        # img = torch.permute(img, (1, 2, 0))
         plt.imshow(img,  aspect='auto', origin='upper')
         plt.show()
     

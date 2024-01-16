@@ -1,6 +1,7 @@
 import torch
 import subprocess
-from torchvision.io.video import read_video
+# from torchvision.io.video import read_video
+from torchvision.io import read_video, write_video
 from torchvision.transforms import InterpolationMode
 from torchvision.transforms import functional as F
 
@@ -53,13 +54,58 @@ def change_frame_rate(self, video, info, target_frame_rate):
 
     return resized_video
 
+def interpolate_frames(frame1, frame2, t):
+    # Linear interpolation between two frames
+    return (1 - t) * frame1 + t * frame2
 
-# Specify the file path
-# input_file = '/path/to/your/input_video.mp4'
 
-# # Convert video to PyTorch tensor
-# target_fps = 25
-# video_tensor = convert_video_to_tensor(input_file, target_fps)
 
-# # Print the shape of the video tensor
-# print("Video Tensor Shape:", video_tensor.shape)
+def interpolate_frames(frame1, frame2, t):
+    return (1 - t) * frame1 + t * frame2
+
+def adjust_fps(frames, info, target_fps):
+
+    original_fps = info['video_fps']
+
+    adjustment_factor =  target_fps / original_fps
+
+    if adjustment_factor > 1:
+     
+        indices_to_interpolate = torch.arange(0, frames.size(0) - 1, 1 / adjustment_factor).long()
+        print(indices_to_interpolate)
+        interpolated_frames = []
+        for idx in indices_to_interpolate:
+            t = idx % 1 
+            interpolated_frame = interpolate_frames(frames[idx], frames[idx + 1], t)
+            interpolated_frames.append(interpolated_frame)
+       
+        output_frames = torch.cat([frames, torch.stack(interpolated_frames)], dim=0)
+        
+    elif adjustment_factor < 1:
+       
+        indices_to_keep = torch.arange(0, frames.size(0), int(1 / adjustment_factor)).long()
+        output_frames = frames[indices_to_keep]
+    else:
+        return video_tensor, info
+
+    info['video_fps'] = target_fps
+
+   
+
+    return output_frames
+
+if __name__ == "__main__":
+    # Read a video file into a PyTorch tensor
+    video_file = "/home/zottang/working_dir/Videos/video/test2.mov"
+    video_tensor, audio, info = read_video(video_file)
+
+    # Set the target fps (you can change this value to increase or decrease fps)
+    target_fps = 30
+
+    # Adjust fps and get the output video tensor
+    print(video_tensor.shape, info)
+    output_video = adjust_fps(video_tensor, info, target_fps)
+    print(output_video.shape)
+    # Write the output video tensor to a new file
+    # output_file = "/home/zottang/working_dir/Videos/video/test2.mp4"
+   

@@ -215,8 +215,6 @@ class IdentityLoss:
 		return  1 - F.cosine_similarity(e1, e2)
         
 		
-
-
 if __name__=='__main__':
 
     # facenet = Backbone(input_size=112, num_layers=50, drop_ratio=0.6, mode='ir_se').to('cuda')

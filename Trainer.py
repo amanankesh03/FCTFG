@@ -17,6 +17,13 @@ class Trainer(nn.Module):
     def __init__(self, args, device, rank):
         super(Trainer, self).__init__()
 
+        self.w_vgg = 1
+        self.w_l1 = 1
+        self.w_ortholoss = 1
+        self.w_gan_g_loss = 1
+        self.w_Id_loss = 1
+        self.w_sync_loss = 1
+
         self.args = args
         self.batch_size = args.batch_size
         self.device = device
@@ -55,8 +62,6 @@ class Trainer(nn.Module):
         return real_loss.mean() + fake_loss.mean()
 
     def gen_update(self, imgs, spectrogram):
-        # vgg_loss = torch.zeros([1]).to(self.device)
-        # gan_g_loss = torch.zeros([1]).to(self.device)
         
         self.gen.train()
         self.gen.zero_grad()
@@ -75,7 +80,10 @@ class Trainer(nn.Module):
         l1_loss = F.l1_loss(img_target_recon, imgs[:, -1])
         gan_g_loss = self.g_nonsaturating_loss(img_recon_pred)
 
-        g_loss = vgg_loss + l1_loss + gan_g_loss + ortholoss
+        g_loss = self.w_vgg *vgg_loss 
+        g_loss += self.w_l1 * l1_loss 
+        g_loss += self.w_gan_g_loss * gan_g_loss 
+        g_loss += self.w_ortholoss * ortholoss
 
         loss_dict = {
 

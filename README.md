@@ -121,32 +121,21 @@
 
 #### Losses : 
                 1. Sync Loss : to do
-                2. VGG19 Loss: to do
-                3. Orthogonality Loss : to do
-                4. Identity Loss : to do
-                5. Reconstruction Loss : done
-                6. Adversarial loss : done
+                2. VGG19 Loss: Done
+                3. Orthogonality Loss : Done
+                4. Identity Loss : Done
+                5. Reconstruction Loss : Done
+                6. Adversarial loss : Done
 
-#### Preprocess :
+#### Utils :
 
-                1. Audio PreProcess : Done
-                2. Video PreProcess : to do
+                1. AudioUtils : Done
+                2. VideoUtils : Done (need some modification)
 
 #### Training : 
-                1.trainer : basic code is done need to add losses
-                2.train : to do
+                1.trainer.py : Done
+                2.train.py : Done
 
 #### Options : 
-                1. BaseOptions : done
+                1. BaseOptions : Done
 
-
-#### To Do next: 
-
-        1. Audio Encoder - To Reading paper referenced (read Wav2Lip)
-        2. Temporal Fusion - Finding paper related to it 
-
-#### Dataset:
-
-        1. Video, Audio Length ?
-        2. If a random frame is selected as input then mel-spectrum should be centered at the frame, How to do that?
-        3. what will be the window length (size of mel-spectrum [-2 sec,  +2 sec])
