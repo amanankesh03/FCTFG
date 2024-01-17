@@ -44,7 +44,7 @@ def change_video_fps(input_file, output_file, video_fr):
     subprocess.run(ffmpeg_command, check=True)
 
 
-def change_frame_rate(self, video, info, target_frame_rate):
+def change_frame_rate(video, info, target_frame_rate):
     
     original_frame_rate = info['video_fps']
     frame_rate_ratio = original_frame_rate / target_frame_rate

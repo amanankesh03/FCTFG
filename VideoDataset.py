@@ -42,7 +42,7 @@ class FCTFG_VIDEO(Dataset):
             self.num_of_samples_per_video = 20
         elif split == 'test':
             self.Data_path = self.args.test_dataset_path
-            self.num_of_samples_per_video = 5
+            self.num_of_samples_per_video = 1
         else:
             raise NotImplementedError
 
@@ -76,17 +76,18 @@ class FCTFG_VIDEO(Dataset):
         video, audio, info = read_video(video_path)
         h = video.shape[1]
         w = video.shape[2]
+        
 
         if abs(info['video_fps'] - 25.0) > 0:
             # print(video_path)
             try:
                 video = convert_video_to_tensor(video_path, self.video_fr, h, w)
                 info['video_fps'] = self.video_fr
-            # print(f" video shape : {video.shape}")
             except Exception as e:
                 print(e)
+                print("\n\n check the video : ", self.video_list[idx])
                 return [], audio, info
-            # self.display_direct(video[1])
+         
         
         return video.float(), audio, info
 
@@ -135,6 +136,7 @@ class FCTFG_VIDEO(Dataset):
         return samples
     
     def display_direct(self, img):
+
         plt.imshow(img,  aspect='auto', origin='upper')
         plt.show()
     
@@ -163,25 +165,26 @@ if __name__ == "__main__":
 
 
     dataset = FCTFG_VIDEO('train', opts)
+    print(len(dataset))
 
-    loader = data.DataLoader(
-        dataset,
-        num_workers=8,
-        pin_memory=True,
-        drop_last=False,
-    )
+    # loader = data.DataLoader(
+    #     dataset,
+    #     num_workers=8,
+    #     pin_memory=True,
+    #     drop_last=False,
+    # )
 
 
-    # loader = sample_data(loader)
-    # for i in range(100):
-    #     for sample in next(loader):
-    #         (tgts, mel) = sample
-    #         # print(tgts.shape, mel.shape)
+    # # loader = sample_data(loader)
+    # # for i in range(100):
+    # #     for sample in next(loader):
+    # #         (tgts, mel) = sample
+    # #         # print(tgts.shape, mel.shape)
             
-    for i in range(2):
-        sample = dataset[i]
-        # for (im, ms) in sample: 
-            # display_img(im[0])
+    # for i in range(2):
+    #     sample = dataset[i]
+    #     # for (im, ms) in sample: 
+    #         # display_img(im[0])
 
 
 

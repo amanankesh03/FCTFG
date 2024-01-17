@@ -18,9 +18,9 @@ class Trainer(nn.Module):
         super(Trainer, self).__init__()
 
         self.w_vgg = 1
-        self.w_l1 = 1
+        self.w_l1 = 100
         self.w_ortholoss = 1
-        self.w_gan_g_loss = 1
+        self.w_gan_g_loss = 0.1
         self.w_Id_loss = 1
         self.w_sync_loss = 1
 
@@ -71,16 +71,14 @@ class Trainer(nn.Module):
 
         img_target_recon, z_s_c, z_c_d, _ = self.gen(imgs, spectrogram)
         img_recon_pred = self.dis(img_target_recon)
-
-        # print(f'trainer 69 : {z_c_d.shape, z_s_c.shape}')
-        
+     
         ortholoss = self.ortholoss(z_s_c, z_c_d, self.device)
         vgg_loss = self.criterion_vgg(img_target_recon, imgs[:, -1]).mean()
         
         l1_loss = F.l1_loss(img_target_recon, imgs[:, -1])
         gan_g_loss = self.g_nonsaturating_loss(img_recon_pred)
 
-        g_loss = self.w_vgg *vgg_loss 
+        g_loss = self.w_vgg * vgg_loss 
         g_loss += self.w_l1 * l1_loss 
         g_loss += self.w_gan_g_loss * gan_g_loss 
         g_loss += self.w_ortholoss * ortholoss

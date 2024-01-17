@@ -79,7 +79,7 @@ class Generator(nn.Module):
             z_s_d = z_s_c + z_c_d
             
             #print(f'add out : {z_s_d.shape}')
-            z_s_d = z_s_d.view(1, (nf - 1)* self.n_styles, self.latent_dim)
+            z_s_d = z_s_d.view(1, (nf - 1) * self.n_styles, self.latent_dim)
 
             #print(f'z_s_d {z_s_d.shape}')
             z_f = self.TemporalFusion(z_s_d)
