@@ -23,81 +23,60 @@ class Generator(nn.Module):
         self.Decoder = Decoder(opts)
         self.flatten = nn.Flatten()
 
-    def forward(self, xss, xas):
+    def forward(self, src, drv, aud):
 
-        bs = xas.shape[0]
-        zas = self.AudioEncoder(xas)
-        # self.details(zas)
-        #print(f'audioEncoder out : {zas.shape}')
-        #assert zas.shape == torch.Size([bs, 1, self.latent_dim])
+        nf = drv.shape[0]
+        
+        ############ audio ###################
+        aud_z = self.AudioEncoder(aud)
+        # print(f'aud_z shape : {aud_z.shape}')
+        # assert aud_z.shape == torch.Size([nf, 1, self.latent_dim])
+        ############ source #################
+    
+        src_z = self.VisualEncoder(src)
+        # print(f'src_z shape : {src_z.shape}')
+        # assert src_z.shape == torch.Size([1, self.n_styles, self.latent_dim])
+        
+        src_zf = self.flatten(src_z)
+        # print(f'z_s flatten {src_zf.shape}')
+        src_zfc = self.CanonicalEncoder(src_zf)
+        
+        # print(f'canonicalEncoder out : {src_zfc.shape}')
+        # assert src_zfc.shape == torch.Size([1, self.n_styles * self.latent_dim])
+        
+        src_zc = src_zfc.view(1, self.n_styles, self.latent_dim)
 
-        zfs = []
-        zcds = []
-        zscs = []
-        for i, batch in enumerate(xss):
-            nf = batch.shape[0]
-            xs = xss[i]
-            za = zas[i]
+        ################### driving ##########################
+        drv_z = self.VisualEncoder(drv)
+        # print(f'visualEncoder drv out : {drv_z.shape}')
+        # assert drv_z.shape == torch.Size([nf, self.n_styles, self.latent_dim])
+                            
+        drv_aud_z = torch.cat([drv_z, aud_z], dim=1)
 
-            zs = self.VisualEncoder(xs)
-            #print(f'visualEncoder s out : {zs.shape}')
-            #assert zs.shape == torch.Size([nf, self.n_styles, self.latent_dim])
-            # source latents
-            # self.details(zs)e
-            z_s = self.flatten(zs[:1])
-            #print(f'z_s flatten {z_s.shape}')
-            #assert z_s.shape == torch.Size([1, self.n_styles * self.latent_dim])
-           
-            z_s_c = self.CanonicalEncoder(z_s)
-            
-            #print(f'canonicalEncoder out : {z_s_c.shape}')
-            #assert z_s_c.shape == torch.Size([1, self.n_styles * self.latent_dim])
-            
-            zscs.append(z_s_c)
-            ################
-            
-            # driving latents
-            z_d = self.flatten(zs[1:]) 
-            #print(f'z_d flatten {z_d.shape}')
-            #assert z_d.shape == torch.Size([(nf - 1), self.n_styles * self.latent_dim])
-            
-            z_a = za.repeat(nf-1, 1)
-            #print(f'z_a : {z_a.shape}')            
-            z_d_a = torch.cat([z_d, z_a], dim=1)
+        # print(f'drv_aud_z {drv_aud_z.shape}')
+        # assert drv_aud_z.shape == torch.Size([nf, self.n_styles + 1, self.latent_dim])
 
-            #print(f'z_d_a {z_d_a.shape}')
+        drv_aud_zf = self.flatten(drv_aud_z)
+        # print(f'drv_aud_z {drv_aud_z.shape}')
+        # assert drv_aud_zf.shape == torch.Size([nf, (self.n_styles + 1) * self.latent_dim])
 
-            z_d_a = self.flatten(z_d_a)
-            z_c_d = self.MotionEncoder(z_d_a)
+        drv_aud_zfc = self.MotionEncoder(drv_aud_zf)
 
-            #print(f'motionEncoder out : {z_c_d.shape}')
-            #assert z_c_d.shape == torch.Size([nf - 1, self.n_styles * self.latent_dim])
+        # print(f'motionEncoder out : {drv_aud_zfc.shape}')
+        # assert drv_aud_zfc.shape == torch.Size([nf, self.n_styles * self.latent_dim])
 
-            z_c_d = z_c_d.view(nf - 1, self.n_styles, self.latent_dim)
-            z_s_c = z_s_c.view(1, self.n_styles, self.latent_dim)
-            z_s_c = z_s_c.repeat(nf - 1, 1, 1)
-            z_s_d = z_s_c + z_c_d
-            
-            #print(f'add out : {z_s_d.shape}')
-            z_s_d = z_s_d.view(1, (nf - 1) * self.n_styles, self.latent_dim)
+        drv_aud_zc = drv_aud_zfc.view(nf, self.n_styles, self.latent_dim)
 
-            #print(f'z_s_d {z_s_d.shape}')
-            z_f = self.TemporalFusion(z_s_d)
+        src_zc = src_zc.repeat(nf, 1, 1)
+        src_drv = src_zc + drv_aud_zc 
+        # print(f'add out : {src_drv.shape}')
 
-            #print(f'temporal fusion out {z_f.shape}')
-            
-            zfs.append(z_f.squeeze(0))
-            zcds.append(z_c_d)
+        fused_style = self.TemporalFusion(src_drv)
+        # print(f'fused_style shape {fused_style.shape}')
 
-        zfs = torch.stack(zfs, dim=0)
-        zcds = torch.stack(zcds, dim=0)
-        zscs = torch.stack(zscs, dim=0)
-
-        im, latents = self.Decoder(zfs)
-        # #print(f'Decoder out {im.shape}')
-        # self.details(im)
-        # return [z_s_c, z_c_d] for orthogonality loss
-        return im, zscs.view(bs, self.n_styles, self.latent_dim), zcds, latents
+        im, latents = self.Decoder(fused_style)
+    
+        return im, src_zc, drv_aud_zc, latents
     
     def details(self, tensor):
         print(f'shape of tensor : {tensor.shape}')
@@ -114,7 +93,7 @@ if __name__ == "__main__":
     # import torchsummary
     import torchvision.transforms as transforms
 
-    opts.size = 128 * 2
+    # opts.size = 128 * 2
     device = "cuda:0"
    
 
@@ -135,17 +114,16 @@ if __name__ == "__main__":
     
     loader = sample_data(loader)
     gen = Generator(opts).to(device)
-    print('here')
+
     sample = next(loader)
-    for (x_s, x_a) in sample:
+    for (src, drv, aud) in sample:
     
-        x_s = x_s.to(device)
-        # x_d = x_d.to(device)
-        x_a = x_a.to(device)
-        # #print(x_s.shape)
-        # torchsummary.summary(gen, x_s, x_d, x_a)
-        im, z_s_c, z_c_d, latents  = gen(x_s, x_a)
-        print(im.shape, z_s_c.shape, z_c_d.shape)
+        src = src.to(device)
+        drv = drv.to(device)
+        aud = aud.to(device)
+        
+        im, src_zc, drv_zc, latents  = gen(src, drv, aud)
+        print(im.shape, drv_zc.shape, src_zc.shape)
         break
 
          

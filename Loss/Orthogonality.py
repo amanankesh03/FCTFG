@@ -7,13 +7,12 @@ class OrthogonalityLoss(nn.Module):
         super(OrthogonalityLoss, self).__init__()
 
 
-    def forward(self, src, tgts, device):
-        src = src.unsqueeze(1).repeat(1, tgts.shape[1], 1, 1)
-        res = src * tgts
-        res = torch.sum(res, dim = 3)        
+    def forward(self, s_latents, d_latents):
+        res = s_latents * d_latents
+        res = torch.sum(res, dim=2)        
         res = torch.abs(res)
-        res = res.mean()
-        return res
+
+        return res.mean()
     
 
 

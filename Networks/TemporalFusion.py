@@ -9,7 +9,7 @@ class TemporalFusion(nn.Module):
         
         n_styles = int(math.log(opts.size, 2) * 2 - 2)
 
-        input_channels = n_styles * (opts.num_frames - 1)
+        input_channels = n_styles 
         output_channels = n_styles
         kernel_size = opts.temporal_fusion_kernel_size
         self.conv1d = nn.Conv1d(in_channels=input_channels, out_channels=output_channels, kernel_size=kernel_size, padding=1)

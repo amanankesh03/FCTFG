@@ -8,6 +8,9 @@ from Networks.Discriminator import Discriminator
 from torch.nn.parallel import DistributedDataParallel as DDP
 from Loss.Orthogonality import OrthogonalityLoss
 
+import warnings
+warnings.filterwarnings("ignore")
+
 def requires_grad(net, flag=True):
     for p in net.parameters():
         p.requires_grad = flag
@@ -61,7 +64,7 @@ class Trainer(nn.Module):
 
         return real_loss.mean() + fake_loss.mean()
 
-    def gen_update(self, imgs, spectrogram):
+    def gen_update(self, src, drv, mel):
         
         self.gen.train()
         self.gen.zero_grad()
@@ -69,14 +72,13 @@ class Trainer(nn.Module):
         requires_grad(self.gen, True)
         requires_grad(self.dis, False)
 
-        img_target_recon, z_s_c, z_c_d, _ = self.gen(imgs, spectrogram)
-        img_recon_pred = self.dis(img_target_recon)
-     
-        ortholoss = self.ortholoss(z_s_c, z_c_d, self.device)
-        vgg_loss = self.criterion_vgg(img_target_recon, imgs[:, -1]).mean()
+        recon, src_zc, drv_zc, _ = self.gen(src, drv, mel)
+        recon_pred = self.dis(recon)
+        ortholoss = self.ortholoss(src_zc, drv_zc)
+        vgg_loss = self.criterion_vgg(recon, drv).mean()
         
-        l1_loss = F.l1_loss(img_target_recon, imgs[:, -1])
-        gan_g_loss = self.g_nonsaturating_loss(img_recon_pred)
+        l1_loss = F.l1_loss(recon, drv)
+        gan_g_loss = self.g_nonsaturating_loss(recon_pred)
 
         g_loss = self.w_vgg * vgg_loss 
         g_loss += self.w_l1 * l1_loss 
@@ -94,7 +96,7 @@ class Trainer(nn.Module):
         g_loss.backward()
         self.g_optim.step()
 
-        return loss_dict, img_target_recon
+        return loss_dict, recon
 
     def dis_update(self, img_real, img_recon):
         self.dis.zero_grad()
@@ -111,11 +113,11 @@ class Trainer(nn.Module):
 
         return d_loss
 
-    def sample(self, imgs, spectrogram):
+    def sample(self, src, drv, mel):
         with torch.no_grad():
             self.gen.eval()
-            img_recon, _, _, _ = self.gen(imgs, spectrogram)
-        return img_recon
+            recon, _, _, _ = self.gen(src, drv, mel)
+        return recon
 
     def resume(self, resume_ckpt):
         print("load model:", resume_ckpt)
@@ -124,9 +126,9 @@ class Trainer(nn.Module):
         start_iter = int(os.path.splitext(ckpt_name)[0])
 
         self.gen.module.load_state_dict(ckpt["gen"])
-        self.dis.module.load_state_dict(ckpt["dis"])
+        # self.dis.module.load_state_dict(ckpt["dis"])
         self.g_optim.load_state_dict(ckpt["g_optim"])
-        self.d_optim.load_state_dict(ckpt["d_optim"])
+        # self.d_optim.load_state_dict(ckpt["d_optim"])
 
         return start_iter
 

@@ -7,11 +7,17 @@ from torch.utils import data
 from VideoDataset import FCTFG_VIDEO
 import torchvision
 import torchvision.transforms as transforms
+
 from Trainer import Trainer
 
 from torch.utils.tensorboard import SummaryWriter
 import torch.distributed as dist
 import torch.multiprocessing as mp
+import matplotlib.pyplot as plt
+
+import warnings
+warnings.filterwarnings("ignore")
+
 
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = True
@@ -55,17 +61,30 @@ def ddp_setup(args, rank, world_size):
     dist.init_process_group("nccl", rank=rank, world_size=world_size)
 
 def log_test_samples(loader_test, rank, trainer, writer, i):
+    
     test_samples = next(loader_test)
-    for test_sample in test_samples:
-        (test_imgs, test_mel) = test_sample
-        test_imgs = test_imgs.to(rank, non_blocking=True)
-        test_mel = test_mel.to(rank, non_blocking=True)
 
-        test_img_recon = trainer.sample(test_imgs, test_mel)
-        # print(f'test_imgs shape : {test_imgs.shape}, {test_img_recon.shape}')
-        display_img(i, test_imgs[:, 0], 'source', writer)
-        display_img(i, test_imgs[:,-1], 'target', writer)
-        display_img(i, test_img_recon, 'recon', writer)
+    for test_sample in test_samples:
+        src, drv, mel  = test_sample
+        src = src[0].to(rank, non_blocking=True)
+        drv = drv[0].to(rank, non_blocking=True)
+        mel = mel[0].to(rank, non_blocking=True)
+
+        recon = trainer.sample(src, drv, mel)
+        # print(f'test_imgs shape : {src.shape}, {recon.shape}')
+        display_img(i, src, 'source', writer)
+        display_img(i, drv, 'target', writer)
+        display_img(i, recon, 'recon', writer)
+
+
+        # Create a figure using matplotlib
+        mel_np = mel.squeeze(1)[0].cpu().numpy()
+        plt.figure(figsize=(10, 5))
+        plt.imshow(mel_np, cmap='viridis', origin='lower', aspect='auto')
+
+        # Log the mel spectrogram figure
+        writer.add_figure('Mel Spectrogram', plt.gcf())
+
         writer.flush()
 
 def main(rank, world_size, args):
@@ -91,7 +110,7 @@ def main(rank, world_size, args):
         dataset_train,
         num_workers=4,
         batch_size=args.batch_size // world_size,
-        sampler=data.distributed.DistributedSampler(dataset_train, num_replicas=world_size, rank=rank, shuffle=False),
+        sampler=data.distributed.DistributedSampler(dataset_train, num_replicas=world_size, rank=rank, shuffle=True),
         pin_memory=True,
         drop_last=True,
     )
@@ -100,7 +119,7 @@ def main(rank, world_size, args):
         dataset_test,
         num_workers=4,
         batch_size=1,
-        sampler=data.distributed.DistributedSampler(dataset_test, num_replicas=world_size, rank=rank, shuffle=False),
+        sampler=data.distributed.DistributedSampler(dataset_test, num_replicas=world_size, rank=rank, shuffle=True),
         pin_memory=True,
         drop_last=True,
     )
@@ -122,46 +141,41 @@ def main(rank, world_size, args):
     pbar = tqdm(args.iter)
     i = args.start_iter
     for idx in range(args.iter):
-        try:
+        # try:
+        for sample in next(loader):
+            src, drv, mel = sample
 
-        # loading data
-            for sample in next(loader):
-                # try:
-                (imgs, mel) = sample
-                # print(mel.shape)
-                imgs = imgs.to(rank)
-                mel = mel.to(rank)
+            src = src[0].to(rank)
+            drv = drv[0].to(rank)
+            mel = mel[0].to(rank)
 
-                # update generator
-                loss_dict, img_recon = trainer.gen_update(imgs, mel)
-                # details(img_recon)
+            loss_dict, recon = trainer.gen_update(src, drv, mel)
 
-                # update discriminator
-                if i%args.dis_update_every == 0:
-                    gan_d_loss = trainer.dis_update(imgs[:, -1], img_recon)
-                    loss_dict['gan_d_loss'] = gan_d_loss.item()
+            if i%args.dis_update_every == 0:
+                gan_d_loss = trainer.dis_update(drv, recon)
+                loss_dict['gan_d_loss'] = gan_d_loss.item()
 
-                # write to log
-                if rank == 0:
-                    log_loss(idx, loss_dict, writer)
-
-                # display
-                if i % args.display_freq == 0 and rank == 0:
-                    print(f'{i} :  {loss_dict}')
-
-                    if rank == 0:
-                        log_test_samples(loader_test, rank, trainer, writer, i)
-                i+=1
-                # save model
-                if i % args.save_freq == 0 and rank == 0:
-                    trainer.save(i, checkpoint_path)
-            
-        except Exception as e:
-            print(e)
             if rank == 0:
+                log_loss(idx, loss_dict, writer)
+
+            if i % args.display_freq == 0 and rank == 0:
+                print(f'{i} :  {loss_dict}')
+
+                if rank == 0:
+                    log_test_samples(loader_test, rank, trainer, writer, i)
+            if i % args.save_freq == 0 and rank == 0:
                 trainer.save(i, checkpoint_path)
-                break
+            
+            i+=1
+            
+        # except Exception as e:
+        #     print(e)
+        #     if rank == 0:
+        #         trainer.save(i, checkpoint_path)
+        #         break
+
         pbar.update(1)
+    
     return
 
 def details(tensor):
