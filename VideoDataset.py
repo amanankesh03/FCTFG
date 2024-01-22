@@ -120,7 +120,8 @@ class FCTFG_VIDEO(Dataset):
             src = video[idx:idx+1]/255.0
         
             src = torch.permute(src, (0, 3, 1, 2))
-            s = random.randint(2, len(video) - self.window_size - 3)
+            s = random.randint(2, len(video) - self.window_size - 3)   #5 frames so 2 to last-3
+            
             e = s + self.window_size
             v_window = torch.permute(video[s:e]/255.0, (0,3,1,2))
             
@@ -129,7 +130,7 @@ class FCTFG_VIDEO(Dataset):
                      
             mel_sgram = self.mel_sgram_from_window(audio, info, start_frame=s, end_frame=e)
             
-            if mel_sgram.shape != torch.Size([5, 1, 80, 16]):
+            if mel_sgram.shape != torch.Size([self.window_size, 1, 80, 16]):
                 print(mel_sgram.shape)
                 continue
 

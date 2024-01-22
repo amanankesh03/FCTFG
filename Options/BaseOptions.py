@@ -3,7 +3,7 @@ parser = argparse.ArgumentParser()
 
 ### Training Options ####
 parser.add_argument("--iter", type=int, default=800000, help='Number of image iterations')
-parser.add_argument("--size", type=int, default=256, help='Image size')
+parser.add_argument("--size", type=int, default=512, help='Image size')
 parser.add_argument("--batch_size", type=int, default=1)
 parser.add_argument("--start_iter", type=int, default=0)
 parser.add_argument("--resume_ckpt", type=str, default=None)
@@ -15,7 +15,7 @@ parser.add_argument("--save_freq", type=int, default=5000)
 parser.add_argument("--display_freq", type=int, default=100)
 parser.add_argument("--train_dataset_path", type=str, default='/home/zottang/Data/training_data/')
 parser.add_argument("--test_dataset_path", type=str, default='/home/zottang/Data/training_data/')
-parser.add_argument("--num_frames", type=int, default=5)
+parser.add_argument("--num_frames", type=int, default=3)
 parser.add_argument("--device", type=str, default="cuda:0")
 parser.add_argument("--latent_dim", type=int, default=512)
 

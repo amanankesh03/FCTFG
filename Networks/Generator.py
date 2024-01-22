@@ -22,6 +22,7 @@ class Generator(nn.Module):
 
         self.Decoder = Decoder(opts)
         self.flatten = nn.Flatten()
+        
 
     def forward(self, src, drv, aud):
 
@@ -33,11 +34,12 @@ class Generator(nn.Module):
         # assert aud_z.shape == torch.Size([nf, 1, self.latent_dim])
         ############ source #################
     
-        src_z = self.VisualEncoder(src)
+        src_drv = torch.cat([src, drv], dim=0)
+        src_drv_z = self.VisualEncoder(src_drv)
         # print(f'src_z shape : {src_z.shape}')
         # assert src_z.shape == torch.Size([1, self.n_styles, self.latent_dim])
-        
-        src_zf = self.flatten(src_z)
+
+        src_zf = self.flatten(src_drv_z[:1])
         # print(f'z_s flatten {src_zf.shape}')
         src_zfc = self.CanonicalEncoder(src_zf)
         
@@ -47,11 +49,10 @@ class Generator(nn.Module):
         src_zc = src_zfc.view(1, self.n_styles, self.latent_dim)
 
         ################### driving ##########################
-        drv_z = self.VisualEncoder(drv)
         # print(f'visualEncoder drv out : {drv_z.shape}')
         # assert drv_z.shape == torch.Size([nf, self.n_styles, self.latent_dim])
                             
-        drv_aud_z = torch.cat([drv_z, aud_z], dim=1)
+        drv_aud_z = torch.cat([src_drv_z[1:], aud_z], dim=1)
 
         # print(f'drv_aud_z {drv_aud_z.shape}')
         # assert drv_aud_z.shape == torch.Size([nf, self.n_styles + 1, self.latent_dim])
@@ -118,9 +119,12 @@ if __name__ == "__main__":
     sample = next(loader)
     for (src, drv, aud) in sample:
     
-        src = src.to(device)
-        drv = drv.to(device)
-        aud = aud.to(device)
+        src = src[0].to(device)
+        drv = drv[0].to(device)
+        aud = aud[0].to(device)
+
+        # src_drv = torch.cat([src, drv], dim=0)
+        # print(src_drv.shape)
         
         im, src_zc, drv_zc, latents  = gen(src, drv, aud)
         print(im.shape, drv_zc.shape, src_zc.shape)

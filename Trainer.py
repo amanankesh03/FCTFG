@@ -35,8 +35,8 @@ class Trainer(nn.Module):
         self.dis = Discriminator(args).to(device)
 
         # distributed computing
-        self.gen = DDP(self.gen, device_ids=[rank], find_unused_parameters=True)
-        self.dis = DDP(self.dis, device_ids=[rank], find_unused_parameters=True)
+        # self.gen = DDP(self.gen, device_ids=[rank], find_unused_parameters=True)
+        # self.dis = DDP(self.dis, device_ids=[rank], find_unused_parameters=True)
 
         g_reg_ratio = args.g_reg_every / (args.g_reg_every + 1)
         d_reg_ratio = args.d_reg_every / (args.d_reg_every + 1)
@@ -135,8 +135,8 @@ class Trainer(nn.Module):
     def save(self, idx, checkpoint_path):
         torch.save(
             {
-                "gen": self.gen.module.state_dict(),
-                "dis": self.dis.module.state_dict(),
+                "gen": self.gen.state_dict(),
+                "dis": self.dis.state_dict(),
                 "g_optim": self.g_optim.state_dict(),
                 "d_optim": self.d_optim.state_dict(),
                 "args": self.args

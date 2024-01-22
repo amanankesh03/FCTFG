@@ -3,7 +3,7 @@ import math
 import numpy as np
 from torch import nn
 import torch.nn.functional as F
-from torch.nn import Linear, Conv2d, BatchNorm2d, PReLU, Sequential, Module
+from torch.nn import Linear, Conv2d, BatchNorm2d, PReLU, Sequential, Module, BatchNorm1d
 from Networks.VisualEncoderHelper import get_blocks, Flatten, bottleneck_IR, bottleneck_IR_SE
 from Networks.utils import EqualLinear
 
@@ -38,28 +38,25 @@ class GradualStyleBlock(Module):
         self.out_c = out_c
         self.spatial = spatial
         num_pools = int(math.ceil(np.log2(spatial)))
-        # print(f'num_pools : {num_pools}')
         modules = []
         modules += [Conv2d(in_c, out_c, kernel_size=3, stride=2, padding=1),
-                    # BatchNorm2d(out_c),
+                    BatchNorm2d(out_c),
                     nn.LeakyReLU()]
+        
         for i in range(num_pools - 1):
             modules += [
                 Conv2d(out_c, out_c, kernel_size=3, stride=2, padding=1),
-                # BatchNorm2d(out_c),
+                BatchNorm2d(out_c),
                 nn.LeakyReLU()
             ]
         self.convs = nn.Sequential(*modules)
         self.linear = EqualLinear(out_c, out_c, lr_mul=1)
 
     def forward(self, x):
-        # print(f'in shape : {x.shape}')
+
         x = self.convs(x)
-        # print(f'out shape : {x.shape}')
-        # assert x.shape[1] == 1
         x = x.view(x.shape[0], -1, self.out_c)
         x = self.linear(x)
-        # print(f'final shape : {x.shape}')
         return x
 
 
@@ -154,7 +151,6 @@ class GradualStyleEncoder(Module):
 
         for j in range(self.coarse_ind, self.middle_ind):
             latents.append(self.styles[j](p2))
-            # print(f'latents mid : {latents[0].shape, len(latents)}')
            
         p1 = self._upsample_add(p2, self.latlayer2(c1))
         for j in range(self.middle_ind, self.style_count):
