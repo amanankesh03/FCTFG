@@ -5,13 +5,8 @@ import torch.nn.functional as F
 from torch import nn, optim
 from torch.nn.parallel import DistributedDataParallel as DDP
 
-from Networks.Generator import Generator
+from Networks.Decoder_with_mlp import Decoder
 from Networks.Discriminator import Discriminator
-
-from Loss.SyncNet import SyncNet
-from Loss.VGG_loss import VGGLoss
-from Loss.Orthogonality import OrthogonalityLoss
-from Loss.ArcFaceLoss import IdentityLoss
 
 def requires_grad(net, flag=True):
     for p in net.parameters():
@@ -21,18 +16,12 @@ def requires_grad(net, flag=True):
 class Trainer(nn.Module):
     def __init__(self, args, device, rank):
         super(Trainer, self).__init__()
-
-        self.w_vgg = 1
-        self.w_l1 = 100
-        self.w_ortholoss = 1
         self.w_gan_g_loss = 0.1
-        self.w_Id_loss = 1
-        self.w_sync_loss = 1
 
         self.args = args
         self.batch_size = args.batch_size
         self.device = device
-        self.gen = Generator(args).to(
+        self.gen = Decoder(args).to(
             device)
         self.dis = Discriminator(args).to(device)
 
@@ -54,10 +43,6 @@ class Trainer(nn.Module):
             lr=args.lr * d_reg_ratio,
             betas=(0 ** d_reg_ratio, 0.99 ** d_reg_ratio)
         )
-        self.ortholoss = OrthogonalityLoss()
-        self.criterion_vgg = VGGLoss().to(rank)
-        # self.SyncNet_loss = SyncNet().to(rank)
-        # self.Identity_loss = IdentityLoss(rank)
 
     def g_nonsaturating_loss(self, fake_pred):
         return F.softplus(-fake_pred).mean()
@@ -68,15 +53,8 @@ class Trainer(nn.Module):
 
         return real_loss.mean() + fake_loss.mean()
 
-    def get_syncloss(self, imgs, recon, mel):
-        recon = recon.unsqueeze(1)
-        seq = torch.cat((imgs[:, :-1], recon), dim=1)
-        seq = seq.view(imgs.shape[0], -1, 512, 512)
-        
-        return self.SyncNet_loss(mel, seq)
 
-
-    def gen_update(self, imgs, spectrogram):
+    def gen_update(self, imgs, noise):
         
         self.gen.train()
         self.gen.zero_grad()
@@ -84,28 +62,16 @@ class Trainer(nn.Module):
         requires_grad(self.gen, True)
         requires_grad(self.dis, False)
 
-        img_target_recon, z_s_c, z_c_d, _ = self.gen(imgs, spectrogram)
+        img_target_recon, _ = self.gen(noise)
         img_recon_pred = self.dis(img_target_recon)
      
-        ortholoss = self.ortholoss(z_s_c, z_c_d, self.device)
-        vgg_loss = self.criterion_vgg(img_target_recon, imgs[:, -1]).mean()
-        
-        l1_loss = F.l1_loss(img_target_recon, imgs[:, -1])
         gan_g_loss = self.g_nonsaturating_loss(img_recon_pred)
 
-        g_loss = self.w_vgg * vgg_loss 
-        g_loss += self.w_l1 * l1_loss 
-        g_loss += self.w_gan_g_loss * gan_g_loss 
-        g_loss += self.w_ortholoss * ortholoss
+        g_loss = self.w_gan_g_loss * gan_g_loss 
 
-        # seq = torch.cat(imgs[:, -2], img_target_recon.unsqueeze(1), dim = 1)
 
         loss_dict = {
-
-            "vgg_loss" : vgg_loss.item(),
-            "l1_loss" : l1_loss.item(),
             "gan_g_loss" : gan_g_loss.item(),
-            "ortholoss" : ortholoss.item(),
         }
 
         g_loss.backward()
@@ -131,7 +97,7 @@ class Trainer(nn.Module):
     def sample(self, imgs, spectrogram):
         with torch.no_grad():
             self.gen.eval()
-            img_recon, _, _, _ = self.gen(imgs, spectrogram)
+            img_recon, _ = self.gen(imgs, spectrogram)
         return img_recon
 
     def resume(self, resume_ckpt):

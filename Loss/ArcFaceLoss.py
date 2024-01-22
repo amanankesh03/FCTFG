@@ -204,9 +204,9 @@ class Backbone(Module):
 			return l2_norm(x)
 
 class IdentityLoss:
-	def __init__(self):
-		self.facenet = Backbone(input_size=112, num_layers=50, drop_ratio=0.6, mode='ir_se').to('cuda')
-		self.facenet.load_state_dict(torch.load('/home/amanankesh/working_dir/FC-TFG/Loss/model_ir_se50.pth'))
+	def __init__(self, device='cuda'):
+		self.facenet = Backbone(input_size=112, num_layers=50, drop_ratio=0.6, mode='ir_se').to(device)
+		self.facenet.load_state_dict(torch.load('/home/amanankesh/working_dir/pretraineds/model_ir_se50.pth'))
 		self.facenet.eval()
 		
 	def loss(self, x1, x2):
@@ -220,9 +220,10 @@ if __name__=='__main__':
     # facenet = Backbone(input_size=112, num_layers=50, drop_ratio=0.6, mode='ir_se').to('cuda')
     # facenet.load_state_dict(torch.load('/home/amanankesh/working_dir/FC-TFG/Loss/model_ir_se50.pth'))
     # facenet.eval()
-	Idloss = IdentityLoss()
-	inp1 = torch.randn((1,3,112,112)).to('cuda')
-	inp2 = torch.randn((1,3,112,112)).to('cuda')
+	device ='cuda'
+	Idloss = IdentityLoss(device)
+	inp1 = torch.randn((1,3,112,112)).to(device)
+	inp2 = torch.randn((1,3,112,112)).to(device)
 	
 	# torchsummary.summary(facenet,(3,112,112))
 	op = Idloss.loss(inp1, inp1)

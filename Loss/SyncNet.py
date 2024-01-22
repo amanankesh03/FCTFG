@@ -2,11 +2,25 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from .conv import Conv2d
+class Conv2d(nn.Module):
+    def __init__(self, cin, cout, kernel_size, stride, padding, residual=False):
+        super().__init__()
+        self.conv_block = nn.Sequential(
+                            nn.Conv2d(cin, cout, kernel_size, stride, padding),
+                            nn.BatchNorm2d(cout)
+                            )
+        self.act = nn.ReLU()
+        self.residual = residual
 
-class SyncNet512_color(nn.Module):
+    def forward(self, x):
+        out = self.conv_block(x)
+        if self.residual:
+            out += x
+        return self.act(out)
+
+class SyncNet(nn.Module):
     def __init__(self):
-        super(SyncNet512_color, self).__init__()
+        super(SyncNet, self).__init__()
             
         self.face_encoder = nn.Sequential(
             Conv2d(15, 16, kernel_size=(7, 7), stride=1, padding=3),               # 256x512 -> 256x512
@@ -77,4 +91,28 @@ class SyncNet512_color(nn.Module):
         audio_embedding = F.normalize(audio_embedding, p=2, dim=1)
         face_embedding = F.normalize(face_embedding, p=2, dim=1)
 
-        return audio_embedding, face_embedding
+        return self.loss(audio_embedding, face_embedding)
+    
+    def loss(self, ae, fe):
+        return  1 - F.cosine_similarity(ae, fe)
+
+if __name__ == "__main__":
+    from VideoDataset import FCTFG_VIDEO
+    from Options.BaseOptions import opts
+
+    dataset = FCTFG_VIDEO('test', opts)
+
+    pth = '/home/amanankesh/working_dir/Extras/checkpoint_step004595000_512_fixed_audio.pth'
+    ckpt = torch.load(pth)
+    syncNet = SyncNet()    
+    syncNet.load_state_dict(ckpt['state_dict'])
+
+    syncNet = syncNet.to(opts.device).eval()
+
+    mel = torch.randn([1, 1, 80, 16]).to(opts.device)
+    imgs = torch.randn([1, 15, 256, 512]).to(opts.device)
+
+    loss = syncNet(mel, imgs)
+
+    print(loss)
+

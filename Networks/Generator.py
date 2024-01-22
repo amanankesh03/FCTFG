@@ -59,7 +59,7 @@ class Generator(nn.Module):
             # driving latents
             z_d = self.flatten(zs[1:]) 
             #print(f'z_d flatten {z_d.shape}')
-            #assert z_d.shape == torch.Size([(nf - 1), self.n_styles * self.latent_dim])
+            #assert z_d.shape == torch.Size([(nf - 1), self.n_stylesgc * self.latent_dim])
             
             z_a = za.repeat(nf-1, 1)
             #print(f'z_a : {z_a.shape}')            
