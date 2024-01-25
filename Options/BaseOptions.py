@@ -3,19 +3,19 @@ parser = argparse.ArgumentParser()
 
 ### Training Options ####
 parser.add_argument("--iter", type=int, default=800000, help='Number of image iterations')
-parser.add_argument("--size", type=int, default=512, help='Image size')
-parser.add_argument("--batch_size", type=int, default=1)
+parser.add_argument("--size", type=int, default=256, help='Image size')
+parser.add_argument("--batch_size", type=int, default=36)
 parser.add_argument("--start_iter", type=int, default=0)
-parser.add_argument("--resume_ckpt", type=str, default='/home/zottang/working_dir/exps/19thJan2024/checkpoint/020000.pt')
+parser.add_argument("--resume_ckpt", type=str, default='/home/zottang/working_dir/exps/Decoder23/23ndJan2024/checkpoint/070000.pt')
 parser.add_argument("--port", type=str, default='12345')
 parser.add_argument("--addr", type=str, default='localhost')
-parser.add_argument("--exp_path", type=str, default='../exps/')
-parser.add_argument("--exp_name", type=str, default='22ndJan2024')
+parser.add_argument("--exp_path", type=str, default='../exps/Decoder23/')
+parser.add_argument("--exp_name", type=str, default='23ndJan2024')
 parser.add_argument("--save_freq", type=int, default=5000)
 parser.add_argument("--display_freq", type=int, default=100)
-parser.add_argument("--train_dataset_path", type=str, default='/home/zottang/Data/training_data/')
-parser.add_argument("--test_dataset_path", type=str, default='/home/zottang/Data/training_data/')
-parser.add_argument("--num_frames", type=int, default=3)
+parser.add_argument("--train_dataset_path", type=list, default=['/home/zottang/Data/training_data/', '/home/zottang/DATA/training_data'])
+parser.add_argument("--test_dataset_path", type=list, default=['/home/zottang/Data/training_data/','/home/zottang/DATA/training_data'])
+parser.add_argument("--num_frames", type=int, default=5)
 parser.add_argument("--device", type=str, default="cuda:0")
 parser.add_argument("--latent_dim", type=int, default=512)
 
@@ -51,20 +51,23 @@ parser.add_argument('--temporal_fusion_kernel_size', default=3, type=int, help='
 
 ### Generator Options
 parser.add_argument("--g_reg_every", type=int, default=4, help='generator regularization every nth iteration')
-parser.add_argument("--lr", type=float, default=0.002)
-parser.add_argument("--dis_update_every", type=int, default=50)
+parser.add_argument("--lr", type=float, default=0.003)
 
 
 ### Decoder Options ###
 parser.add_argument("--decoder_channel_multiplier", type=int, default=1)
 parser.add_argument("--decoder_latent_dim_style", type=int, default=512)
+parser.add_argument("--decoder_n_mlp", type=int, default=4)
+parser.add_argument("--decoder_lr_mlp", type=int, default=0.002)
 
 
-
+####StyleDecoder
+parser.add_argument('--decoder_motion_dim', type=int, default=20)
 
 
 ### Discriminator Options ###
 parser.add_argument("--channel_multiplier", type=int, default=1)
+parser.add_argument("--dis_update_every", type=int, default=5)
 parser.add_argument("--d_reg_every", type=int, default=16, help='discriminator regularization every kth iteration')
 
 

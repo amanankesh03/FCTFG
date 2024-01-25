@@ -15,7 +15,7 @@ import torchvision.transforms as VisionTransforms
 from torchvision.transforms import functional as F
 
 from torchvision.io.video import read_video, write_video
-
+import matplotlib.pyplot as plt
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -28,21 +28,22 @@ class DecoderDataset(Dataset):
         self.args = args
         if split == 'train':
             self.Data_path = self.args.train_dataset_path
-            self.num_of_samples_per_video = 2
+            self.num_of_samples_per_video = 20
         elif split == 'test':
             self.Data_path = self.args.test_dataset_path
             self.num_of_samples_per_video = 1
         else:
             raise NotImplementedError
 
-
-        self.video_list = glob.glob(f'{self.Data_path }/**/*.mov', recursive=True) 
-        self.video_list += glob.glob(f'{self.Data_path }/**/*.mp4', recursive=True)
+        self.video_list = []
+        for path in self.Data_path:
+            self.video_list += glob.glob(f'{self.Data_path }/**/*.mp4', recursive=True)
+            self.video_list += glob.glob(f'{self.Data_path }/**/*.mov', recursive=True) 
 
         ########## Video #############
         self.video_fr = 25
         self.video_size = args.size
-        self.window_size = args.num_frames            # num of frames to take in a batch (1 for src, k for driving, total k + 1 )
+        self.window_size = args.num_frames  # num of frames to take in a batch (1 for src, k for driving, total k + 1 )
         self.vtransform = vtransform
 
         if self.vtransform is None:
@@ -65,29 +66,20 @@ class DecoderDataset(Dataset):
 
 
     def __getitem__(self, idx):
-        samples = []
+
         video, audio, info = self.read_video(idx)
         
-        while len(video) < 10:
+        while len(video) <= 20:
             self.video_list.remove(self.video_list[idx])
             video, audio, info = self.read_video(idx)            
 
-        for i in range(self.num_of_samples_per_video):
-            s = random.randint(0, len(video) - self.window_size -1)
-            e = s + self.window_size
-            v_window = torch.permute(video[s:e]/255.0, (0,3,1,2))
-            
-            v_window = self.vtransform(v_window)  
-                     
-            mel_sgram = self.mel_sgram_from_window(audio, info, start_frame=s, end_frame=e)
-            
-            if mel_sgram.shape != torch.Size([1, 80, 16]):
-                continue
-
-            samples.append((v_window, mel_sgram))
-        if len(samples) != self.num_of_samples_per_video:
-            print(f'samples {len(samples)}', )
-        return samples
+        random_idx = random.sample(range(len(video)), self.num_of_samples_per_video)
+        imgs = torch.permute(video[random_idx]/255.0, (0,3,1,2))
+        
+        imgs = self.vtransform(imgs)  
+        if len(imgs) != self.num_of_samples_per_video:
+            print(f'samples {len(imgs)}')
+        return imgs
     
     def display_direct(self, img):
 
@@ -102,26 +94,12 @@ class DecoderDataset(Dataset):
         plt.show()
 
 if __name__ == "__main__":
-        
-    import numpy as np
+
     from Options.BaseOptions import opts
-    import matplotlib.pyplot as plt
-    from torch.utils import data
-    import torchvision
-    import torchvision.transforms as transforms
+    dataset = DecoderDataset('train', opts)
 
-    opts.num_of_samples_per_video = 1
-    
-    def sample_data(loader):
-        while True:
-            for batch in loader:
-                yield batch
-
-
-    dataset = FCTFG_VIDEO('train', opts)
-    print(len(dataset))
-
-
+    print(dataset[0].shape)
+    dataset.display_img(dataset[10][0])
 
 
 

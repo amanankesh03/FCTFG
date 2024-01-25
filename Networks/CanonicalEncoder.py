@@ -9,10 +9,11 @@ class CanonicalEncoder(nn.Module):
         super(CanonicalEncoder, self).__init__()
         n_styles = int(math.log(opts.size, 2) * 2 - 2)
 
-        num_neurons = n_styles * opts.latent_dim
-        self.fc1 = nn.Linear(num_neurons, num_neurons)  # Fully connected layer 1
+        input_neurons = opts.latent_dim
+        output_neurons = opts.latent_dim
+        self.fc1 = nn.Linear(input_neurons, input_neurons)  # Fully connected layer 1
         self.relu = nn.ReLU()  # ReLU activation function
-        self.fc2 = nn.Linear(num_neurons, num_neurons)  # Fully connected layer 2
+        self.fc2 = nn.Linear(input_neurons, output_neurons)  # Fully connected layer 2
 
     def forward(self, x):
         x = self.fc1(x)

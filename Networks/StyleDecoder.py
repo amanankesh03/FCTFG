@@ -421,6 +421,8 @@ class ToFlow(nn.Module):
         mask = torch.sigmoid(out[:, 2:3, :, :])
         flow = sampler.permute(0, 2, 3, 1) + xs
 
+        print(f'\n feat {feat.shape} {flow.shape}')
+
         feat_warp = F.grid_sample(feat, flow) * mask
 
         return feat_warp, feat_warp + input * (1.0 - mask), out
@@ -448,15 +450,17 @@ class Direction(nn.Module):
             return out
 
 
-class Synthesis(nn.Module):
-    def __init__(self, size, style_dim, motion_dim, blur_kernel=[1, 3, 3, 1], channel_multiplier=1):
-        super(Synthesis, self).__init__()
+class Decoder(nn.Module):
+    def __init__(self, opts):
+        super(Decoder, self).__init__()
 
-        self.size = size
-        self.style_dim = style_dim
-        self.motion_dim = motion_dim
+        self.size = opts.size
+        self.style_dim = opts.latent_dim
+        self.motion_dim = opts.decoder_motion_dim
+        blur_kernel=[1, 3, 3, 1]
+        channel_multiplier=1
 
-        self.direction = Direction(motion_dim)
+        self.direction = Direction(self.motion_dim)
 
         self.channels = {
             4: 512,
@@ -471,10 +475,10 @@ class Synthesis(nn.Module):
         }
 
         self.input = ConstantInput(self.channels[4])
-        self.conv1 = StyledConv(self.channels[4], self.channels[4], 3, style_dim, blur_kernel=blur_kernel)
-        self.to_rgb1 = ToRGB(self.channels[4], style_dim, upsample=False)
+        self.conv1 = StyledConv(self.channels[4], self.channels[4], 3, self.style_dim, blur_kernel=blur_kernel)
+        self.to_rgb1 = ToRGB(self.channels[4], self.style_dim, upsample=False)
 
-        self.log_size = int(math.log(size, 2))
+        self.log_size = int(math.log(self.size, 2))
         self.num_layers = (self.log_size - 2) * 2 + 1
 
         self.convs = nn.ModuleList()
@@ -487,37 +491,29 @@ class Synthesis(nn.Module):
         for i in range(3, self.log_size + 1):
             out_channel = self.channels[2 ** i]
 
-            self.convs.append(StyledConv(in_channel, out_channel, 3, style_dim, upsample=True,
+            self.convs.append(StyledConv(in_channel, out_channel, 3, self.style_dim, upsample=True,
                                          blur_kernel=blur_kernel))
-            self.convs.append(StyledConv(out_channel, out_channel, 3, style_dim, blur_kernel=blur_kernel))
-            self.to_rgbs.append(ToRGB(out_channel, style_dim))
+            self.convs.append(StyledConv(out_channel, out_channel, 3, self.style_dim, blur_kernel=blur_kernel))
+            self.to_rgbs.append(ToRGB(out_channel, self.style_dim))
 
-            self.to_flows.append(ToFlow(out_channel, style_dim))
+            self.to_flows.append(ToFlow(out_channel, self.style_dim))
 
             in_channel = out_channel
 
         self.n_latent = self.log_size * 2 - 2
 
-    def forward(self, wa, alpha, feats):
+    def forward(self, latent, feats):
 
         # wa: bs x style_dim
         # alpha: bs x style_dim
 
-        bs = wa.size(0)
-
-        if alpha is not None:
-            # generating moving directions
-            if len(alpha) > 1:
-                directions_target = self.direction(alpha[0])  # target
-                directions_source = self.direction(alpha[1])  # source
-                directions_start = self.direction(alpha[2])  # start
-                latent = wa + (directions_target - directions_start) + directions_source
-            else:
-                directions = self.direction(alpha[0])
-                latent = wa + directions  # wa + directions
-        else:
-            latent = wa
-
+        # bs = wa.size(0)
+        # print(f'wa {wa.shape}, alpha {alpha.shape}, feats {feats.shape}')
+        
+        # directions_target = self.direction(alpha[0])  # target
+        # directions_source = self.direction(alpha[1])  # source     
+        # latent = wa + (directions_target - directions_source)
+        
         inject_index = self.n_latent
         latent = latent.unsqueeze(1).repeat(1, inject_index, 1)
 
@@ -526,7 +522,7 @@ class Synthesis(nn.Module):
 
         i = 1
         for conv1, conv2, to_rgb, to_flow, feat in zip(self.convs[::2], self.convs[1::2], self.to_rgbs,
-                                                       self.to_flows, feats):
+                                                       self.to_flows, feats[:,]):
             out = conv1(out, latent[:, i])
             out = conv2(out, latent[:, i + 1])
             if out.size(2) == 8:

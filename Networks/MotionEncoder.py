@@ -8,13 +8,14 @@ class MotionEncoder(nn.Module):
     def __init__(self, opts):
         super(MotionEncoder, self).__init__()
 
-        n_styles = int(math.log(opts.size, 2) * 2 - 2)
-        hidden_neurons = n_styles * opts.latent_dim
-        input_size = (n_styles + 1) * opts.latent_dim
+        # n_styles = int(math.log(opts.size, 2) * 2 - 2)
+        input_neurons = 2 * opts.latent_dim
+        hidden_neurons = opts.latent_dim
+        output_neurons = opts.latent_dim
         
-        self.fc1 = nn.Linear(input_size, hidden_neurons)  # Fully connected layer 1
+        self.fc1 = nn.Linear(input_neurons, hidden_neurons)  # Fully connected layer 1
         self.fc2 = nn.Linear(hidden_neurons, hidden_neurons)  # Fully connected layer 2
-        self.fc3 = nn.Linear(hidden_neurons, hidden_neurons)  # Fully connected layer 3
+        self.fc3 = nn.Linear(hidden_neurons, output_neurons)  # Fully connected layer 3
 
         self.relu = nn.ReLU()  # ReLU activation function
 

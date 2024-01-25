@@ -34,7 +34,7 @@ class Discriminator(nn.Module):
 
         self.convs = nn.Sequential(*convs)
 
-        self.stddev_group = 5
+        self.stddev_group = opts.batch_size
         self.stddev_feat = 1
 
         self.final_conv = ConvLayer(in_channel + 1, channels[4], 3)
@@ -47,7 +47,8 @@ class Discriminator(nn.Module):
         out = self.convs(input)
         batch, channel, height, width = out.shape
 
-        group = min(batch, self.stddev_group)
+        # group = min(batch, self.stddev_group)
+        group = self.stddev_group
         stddev = out.view(group, -1, self.stddev_feat, channel // self.stddev_feat, height, width)
         stddev = torch.sqrt(stddev.var(0, unbiased=False) + 1e-8)
         stddev = stddev.mean([2, 3, 4], keepdims=True).squeeze(2)
